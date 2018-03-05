@@ -1,0 +1,230 @@
+---
+# file: host_vars/$fqdn.yml
+
+### Machine Variables
+
+fqdn: "$fqdn"
+
+## For self-signed certs use ca: "{{ fqdn }}.crt"
+common:
+ ca: "$ca"
+ ssl_cert: "{{ fqdn }}.crt"
+ ssl_key: "{{ fqdn }}.key"
+
+apache:
+ admin_email: "{{ idp_contacts['technical']['mail'] }}"
+
+### JDK Variables - Default "openjdk"
+jdk_type: "openjdk"
+
+### LDAP Variables
+idp_ldap_restore: "false"
+
+ldap:
+ basedn: "$basedn"
+ domain: "$domain"
+ org: "$mdui_displayName_it"
+ url: "ldap://{{ fqdn }}:389"
+ root_dn: "cn=admin,$basedn"
+ root_pw: "$root_ldap_pw"
+ create_test_user: "yes"
+
+### MySQL Variables
+idp_db_restore: "false"
+
+mysql:
+ root_password: "$mysql_root_password"
+
+### RSYSLOG Server
+rsyslog_srv:
+ ip: "192.168.80.8"
+ port: "20514"
+
+### MYSQL/LDAP Backups Server with path
+backups_srv:
+ ip: "192.168.80.9"
+ remote_path: "/data/var/local/backups"
+
+### IDP Variables
+idp_config:
+ sealer_pw: "$sealer_keystore_password"
+ keystore_pw: "$sealer_keystore_password"
+ shibboleth_db_password: "$shibboleth_db_password"
+ scope: "$domain"
+ idp_sourceAttribute: "uid"
+ idp_persistentId_salt: "$idp_persistentId_salt"
+ ldap:
+  authenticator: "bindSearchAuthenticator"
+  url: "ldap://{{ fqdn }}:389"
+  useStartTLS: "true"
+  useSSL: "false"
+  connectTimeout: "3000"
+  sslConfig: "certificateTrust"
+  trustCertificates: "/etc/ssl/certs/cacert.pem"
+  baseDN: "ou=people,$basedn"
+  subtreeSearch: "true"
+  userFilter: "(uid={user})"
+  bindDN: "cn=idpuser,ou=system,$basedn"
+  bindDNCredential: "$bindDNCredential"
+  searchFilter: "(uid=$resolutionContext.principal)"
+  returnAttributes: "*"
+  ppolicy:
+   change_password_url: "{{ url_password_reset }}"
+ fticks:
+  federation: "IDEM GARR AAI"
+  alg: "SHA-256"
+  salt: "$idp_fticks_salt"
+  loghost: "localhost"
+  logport: "514"
+ sup_rs: "yes"
+ sup_coco: "yes"
+
+idp_login:
+ create_info_and_pp_pages: "Yes"
+ footer_text_color: "#ffffff"
+ footer_background_color: "$footer_bkgr_color"
+ idp_url_password_reset: "{{ url_password_reset }}"
+ footer:
+  en:
+   text: "<p>The <strong>{{ idp_metadata['en']['mdui_displayName'] }}</strong>, now is a part of <strong>IDEM</strong> (<strong>IDE</strong>ntity <strong>M</strong>anagement for the access federated) to realize the Italian Authentication and Authorization Infrastructure on the GARR network.</p><p>The credentials to provide access from this authentication system (Identity Provider) are released only to employees and researchers of the institution.</p>"
+  it:
+   text: "<p><strong>{{ idp_metadata['it']['mdui_displayName']}}</strong> partecipa ad <strong>IDEM</strong> (<strong>IDE</strong>ntity <strong>M</strong>anagement federato per l'accesso ai servizi) per la realizzazione dell'Infrastruttura di Autenticazione e Autorizzazione federata della rete GARR.</p><p>Il rilascio delle credenziali di accesso per questo sistema di autenticazione (Identity Provider) è rivolto ai soli dipendenti e ricercatori dell'istituto.</p>"
+ fed_info:
+  edugain:
+   en:
+    name: "eduGAIN Interfederation"
+    url: "http://www.geant.org/Services/Trust_identity_and_security/eduGAIN"
+    logo: "/images/edugain-logo.png"
+   it:
+    name: "Interfederazione eduGAIN"
+    url: "https://www.idem.garr.it/informazioni-tecniche/283-faq-edugain"
+    logo: "/images/edugain-logo.png"
+  federation:
+   en:
+    name: "IDEM GARR AAI"
+    url: "http://www.idem.garr.it/en/"
+    logo: "/images/federation-logo.png"
+   it:
+    name: "IDEM GARR AAI"
+    url: "http://www.idem.garr.it/"
+    logo: "/images/federation-logo.png"
+
+### IDP Metadata Variables
+idp_federation_regAuth: "http://www.idem.garr.it/"
+
+idp_metadata:
+ en:
+  mdui_displayName: "$mdui_displayName_en"
+  mdui_description: "$mdui_description_en"
+  mdui_infoUrl: "$mdui_info_en"
+  mdui_privacyUrl: "$mdui_privacy_en"
+  mdui_favicon: "https://{{ fqdn }}/en/favicon.png"
+  mdui_logo: "https://{{ fqdn }}/en/logo.png"
+  org_name: "$mdui_displayName_en"
+  org_displayName: "$mdui_displayName_en"
+  org_url: "$org_url_en"
+ it:
+  mdui_displayName: "$mdui_displayName_it"
+  mdui_description: "$mdui_description_it"
+  mdui_infoUrl: "$mdui_info_it"
+  mdui_privacyUrl: "$mdui_privacy_it"
+  mdui_favicon: "https://{{ fqdn }}/it/favicon.png"
+  mdui_logo: "https://{{ fqdn }}/it/logo.png"
+  org_name: "$mdui_displayName_it"
+  org_displayName: "$mdui_displayName_it"
+  org_url: "$org_url_it"
+
+idp_contacts:
+ technical:
+  givenName: "IdP-in-the-Cloud"
+  surName: "Service"
+  mail: "idpcloud-service@garr.it"
+ support:
+  givenName: "{{ idp_metadata['it']['mdui_displayName'] }}"
+  surName: "User Support"
+  mail: "$idp_support_email"
+
+### Federation Metadata URL
+idp_metadata_providers:
+ - id: "EDUGAIN2IDEM-FEDERATION"
+   file: "edugain2idem-metadata-sha256.xml"
+   url: "http://www.garr.it/idem-metadata/edugain2idem-metadata-sha256.xml"
+   maxValidInterval: "P5D"
+   disregardTLSCertificate: "false"
+   pubKey: |
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxrLc3bV+zC7cATqGoI9R
+    WO8LKiXk4pMez0JcMgXICiKA/5hJ2WgtIbDHqfqSz1oFsmqXNEEgR3cKkHK9fsaY
+    G4hOXcSWHExjjQK/9QuiTUZsOZAyE9JxTonV/1vnbpH0qz4FthliYFFf2CqalfVH
+    zrsgRLjP4mFedevkrwdM+N9oMaHbE5EvqaxePDAMmBokI6kEJy0u8JZyZSnS5ymX
+    xUcaMUAAjkRvqnBAQQ+PXKpbnaCAz4Ac0VjpsAL1FftC/wyidBnBek00E0v5RycY
+    tUFe0F+13jOrtfE8030X8SV7dgkZo5WTxwIQm3lJ9N6C7NRoDKHx/8F8SzoLC5wJ
+    KwIDAQAB
+ - id: "IDEM-TEST-FEDERATION"
+   file: "idem-test-metadata-sha256.xml"
+   url: "http://www.garr.it/idem-metadata/idem-test-metadata-sha256.xml"
+   maxValidInterval: "P5D"
+   disregardTLSCertificate: "false"
+   pubKey: |
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxrLc3bV+zC7cATqGoI9R
+    WO8LKiXk4pMez0JcMgXICiKA/5hJ2WgtIbDHqfqSz1oFsmqXNEEgR3cKkHK9fsaY
+    G4hOXcSWHExjjQK/9QuiTUZsOZAyE9JxTonV/1vnbpH0qz4FthliYFFf2CqalfVH
+    zrsgRLjP4mFedevkrwdM+N9oMaHbE5EvqaxePDAMmBokI6kEJy0u8JZyZSnS5ymX
+    xUcaMUAAjkRvqnBAQQ+PXKpbnaCAz4Ac0VjpsAL1FftC/wyidBnBek00E0v5RycY
+    tUFe0F+13jOrtfE8030X8SV7dgkZo5WTxwIQm3lJ9N6C7NRoDKHx/8F8SzoLC5wJ
+    KwIDAQAB
+
+### Statistics Web App
+idp_stats:
+ fed_name: "{{ idp_metadata_providers[0]['id'] }}"
+ fed_md: "{{ idp_metadata_providers[0]['file'] }}"
+ fed_site: "https://www.idem.garr.it/"
+ db_pw: "$idp_stats_db_pw"
+
+### CHECK_MK Monitoring Server
+check_mk:
+ check_idp: "true"
+ srv: "###_checkmk.full.qualified.domain.name_###"
+ site: "idpcloud"
+ api_user_name: "apiuser"
+ api_user_secret: "###_YOUR_APIUSER_SECRET_KEY_###"
+ folder: "idp-all-in-one"
+ spEntityID: "https://sp24-test.garr.it/shibboleth"
+ testuser: "testuser"
+ baseDN: "{{ idp_config['ldap']['baseDN'] }}"
+ searchuser: "{{ idp_config['ldap']['bindDN'] }}"
+ searchuser_pw: "{{ idp_config['ldap']['bindDNCredential'] }}"
+ userid_attr: "uid"
+ ldap_url: "{{ idp_config['ldap']['url'] }}"
+ ldap_useStartTLS: "{{ idp_config['ldap']['useStartTLS'] }}"
+ idp_scope: "{{ idp_config['scope'] }}"
+ check_rs: "{{ idp_config['sup_rs'] }}"
+ check_coco: "{{ idp_config['sup_coco'] }}"
+
+### phpLDAPadmin Variables
+pla:
+ orgUrl: "{{ idp_metadata['it']['org_url'] }}"
+ easy_idm: "true"
+ ldap:
+  basedn: "{{ ldap['basedn'] }}"
+  domain: "{{ ldap['domain'] }}"
+  org: "{{ ldap['org'] }}"
+  url: "{{ ldap['url'] }}"
+  root_dn: "{{ ldap['root_dn'] }}"
+  root_pw: "{{ ldap['root_pw'] }}"
+ web_gui_user: "$web_gui_user"
+ web_gui_pw: "$web_gui_pw"
+
+### RSYNC Variables
+rsync:
+ config:
+  ssh_pub_key: "{{ lookup('file', '/opt/ansible-shibboleth/roles/rsync/files/ssh/ssh_pub_key') }}"
+  ssh_priv_key: "{{ lookup('file', '/opt/ansible-shibboleth/roles/rsync/files/ssh/ssh_priv_key') }}"
+
+### idpcloud_garr Variables
+idpcloud_garr:
+ idm: "$idpcloud_idm"
+
+### FLUP Variables
+flup:
+ secret_key: "$flup_secret_key"
+ activation_key: "$idpcloud_idm"
