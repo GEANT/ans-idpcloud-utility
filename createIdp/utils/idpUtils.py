@@ -12,17 +12,17 @@ from cStringIO import StringIO
 # PARAMETERS
 
 os.environ["JAVA_HOME"] = "/usr/lib/jvm/default-java/jre"
-ansible_src = "/opt/idpcloud-data/ansible-shibboleth"
-ansible_vault_pass_file = "/opt/ansible-shibboleth/.vault_pass.txt"
 
 # END PARAMETERS
 
-def get_sealer_keystore_pw(idp_fqdn, debug):
+### FUNCTION NEEDED TO CREATE IDP METADATA CREDENTIALS
+
+def get_sealer_keystore_pw(idp_fqdn, dest, ans_vault_file, debug):
 
    idp_cred_pw = check_output(shlex.split("openssl rand -base64 27")).strip()
 
    ### Create IDP Credentials DIR
-   credentials_dir = ansible_src + "/roles/idp/files/restore/"+ idp_fqdn +"/credentials"
+   credentials_dir = dest + "/roles/idp/files/restore/"+ idp_fqdn +"/credentials"
    call(["mkdir", "-p", credentials_dir])
 
    if(debug):
@@ -98,7 +98,7 @@ def get_sealer_keystore_pw(idp_fqdn, debug):
       idp_cred_pw = file.read()
       file.close()
       if "ANSIBLE_VAULT" in idp_cred_pw:
-         idp_cred_pw = check_output(shlex.split('ansible-vault view --vault-password-file '+ ansible_vault_pass_file+' '+ credentials_dir+'/'+idp_fqdn+'_pw.txt')).strip()
+         idp_cred_pw = check_output(shlex.split('ansible-vault view --vault-password-file '+ ans_vault_file+' '+ credentials_dir+'/'+idp_fqdn+'_pw.txt')).strip()
          return idp_cred_pw
 
       return idp_cred_pw
