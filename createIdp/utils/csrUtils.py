@@ -12,52 +12,55 @@ def generate_csr(nodename, req_info, dest, sans = []):
    if not os.path.exists(dest + '/' + nodename):
       os.makedirs(dest + '/' + nodename)
 
-   dest = dest + '/' + nodename
+      dest = dest + '/' + nodename
 
-   # These variables will be used to create the nodename.csr and nodename.key files.
-   csrfile = dest + '/' + nodename + '.csr'
-   keyfile = dest + '/' + nodename + '.key'
-   # OpenSSL Key Type Variable, passed in later.
-   TYPE_RSA = crypto.TYPE_RSA
+      # These variables will be used to create the nodename.csr and nodename.key files.
+      csrfile = dest + '/' + nodename + '.csr'
+      keyfile = dest + '/' + nodename + '.key'
+      # OpenSSL Key Type Variable, passed in later.
+      TYPE_RSA = crypto.TYPE_RSA
 
-   # Appends SAN to have 'DNS:'
-   ss = []
-   for i in sans:
-       ss.append("DNS: %s" % i)
-   ss = ", ".join(ss)
+      # Appends SAN to have 'DNS:'
+      ss = []
+      for i in sans:
+          ss.append("DNS: %s" % i)
+      ss = ", ".join(ss)
 
-   req = crypto.X509Req()
-   req.get_subject().CN = nodename
+      req = crypto.X509Req()
+      req.get_subject().CN = nodename
 
-   if(req_info == 'y' or req_info == 'Y' or req_info == 'yes' or req_info == 'Yes'):
-     C, ST, L, O, OU = get_csr_subjects()
+      if(req_info == 'y' or req_info == 'Y' or req_info == 'yes' or req_info == 'Yes'):
+        C, ST, L, O, OU = get_csr_subjects()
 
-     req.get_subject().countryName = C
-     req.get_subject().stateOrProvinceName = ST
-     req.get_subject().localityName = L
-     req.get_subject().organizationName = O
-     req.get_subject().organizationalUnitName = OU
+        req.get_subject().countryName = C
+        req.get_subject().stateOrProvinceName = ST
+        req.get_subject().localityName = L
+        req.get_subject().organizationName = O
+        req.get_subject().organizationalUnitName = OU
 
-   # Add in extensions
-   base_constraints = ([
-       crypto.X509Extension("keyUsage", False, "Digital Signature, Non Repudiation, Key Encipherment"),
-       crypto.X509Extension("basicConstraints", False, "CA:FALSE"),
-   ])
-   x509_extensions = base_constraints
-   # If there are SAN entries, append the base_constraints to include them.
-   if ss:
-       san_constraint = crypto.X509Extension("subjectAltName", False, ss)
-       x509_extensions.append(san_constraint)
-   req.add_extensions(x509_extensions)
-   # Utilizes generate_key function to kick off key generation.
-   key = generate_key(TYPE_RSA, 2048)
-   req.set_pubkey(key)
-   req.sign(key, "sha256")
+      # Add in extensions
+      base_constraints = ([
+          crypto.X509Extension("keyUsage", False, "Digital Signature, Non Repudiation, Key Encipherment"),
+          crypto.X509Extension("basicConstraints", False, "CA:FALSE"),
+      ])
+      x509_extensions = base_constraints
+      # If there are SAN entries, append the base_constraints to include them.
+      if ss:
+          san_constraint = crypto.X509Extension("subjectAltName", False, ss)
+          x509_extensions.append(san_constraint)
+      req.add_extensions(x509_extensions)
+      # Utilizes generate_key function to kick off key generation.
+      key = generate_key(TYPE_RSA, 2048)
+      req.set_pubkey(key)
+      req.sign(key, "sha256")
 
-   generate_files(csrfile, req)
-   generate_files(keyfile, key)
+      generate_files(csrfile, req)
+      generate_files(keyfile, key)
 
-   return req
+      return req
+   else:
+      print("\nCSR and KEY already created in: %s/%s" % (dest,nodename) )
+      return 0
 
 def get_csr_subjects():
    while True:

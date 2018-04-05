@@ -1,18 +1,10 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-#from string import Template
-#from base64 import b64encode
-#from os import urandom
-#from os import path
-
 import os
 from collections import OrderedDict
 from subprocess import check_output,call
 from jinja2 import Environment, FileSystemLoader
-
-### CONSTANTS
-DEST_OS_YML="/opt/idpcloud-data/ansible-openstack/inventories/production/group_vars/openstack-client.yml"
 
 ### FUNCTIONS TO CREATE IDP YAML FILE ###
 
@@ -23,62 +15,65 @@ def prepare(vals):
    result = j2_env.get_template('templates/openstack-client.yml.j2').render(j2_vals=vals)
    return result
 
-def create_openstack_client_yml(idp_fqdn):
+def create_openstack_client_yml(idp_fqdn, os_client_dest):
 
-   question_dict = OrderedDict([
-      ("ip_priv","Insert Private IP of your new VM: "),
-      ("ip_pub","Insert Public IP of your new VM: "),
-      ("boot_vlm_size","Insert Boot Disk size (GB) of your new VM (default: 10):"),
-      ("boot_vlm_image","Insert the image name that will be installed on your new VM (default: Debian-8.8.2): "),
-      ("flavor","Insert the VM flavor (default: idem-idpcloud): "),
-      ("data_vlm_size","Do you want to add a persistent volume on you new VM? (default: no): "),
-      ("sec_groups","Do you want to add other security groups in addition to the 'default' one? (default: no): "),
-   ])
+   if(idp_fqdn in open(os_client_dest).read()):
+      print("\nOpenstack Client YAML file is already configured for your '%s' IDP." % idp_fqdn)
+   else:
+      question_dict = OrderedDict([
+         ("ip_priv","Inserisci l'IP Privato della VM: "),
+         ("ip_pub","Inserisci l'IP Pubblico della VM: "),
+         ("boot_vlm_size","Inserisci la dimensione, in GB, del disco di boot della VM: (default: 10)"),
+         ("boot_vlm_image","Inserisci la distribuzione che verrà installata sulla VM (default: Debian-8.8.2): "),
+         ("flavor","Inserisci il flavor della VM (default: idem-idpcloud): "),
+         ("data_vlm_size","Vuoi aggiungere un ulteriore volume persistente? (default: no): "),
+         ("sec_groups","Aggiungere security groups aggiuntivi oltre a default? (default: no): "),
+      ])
 
-   vals = {}
+      vals = {}
 
-   vals['fqdn'] = idp_fqdn
+      vals['fqdn'] = idp_fqdn
 
-   for key,question in question_dict.iteritems():
+      for key,question in question_dict.iteritems():
 
-      result = ""
+         result = ""
 
-      while (result == "" or result == None):
-         result = raw_input(question)
+         while (result == "" or result == None):
+            result = raw_input(question)
 
-         if ( key == 'boot_vlm_image' and (result == "" or result == None) ):
-            result = 'Debian-8.8.2'
-         if ( key == 'boot_vlm_size' and (result == "" or result == None) ):
-            result = '10'
-         elif ( key == 'flavor' and (result == "" or result == None) ):
-            result = 'idem-idpcloud'
-         elif ( key == 'data_vlm_size' and (result == 'yes' or result == 'y' or result == 'si' or result == 's') or result == 'sì'):
-            result = raw_input("Inserisci la dimensione, in GB, del disco dati della VM: ")
-	 elif ( key == 'data_vlm_size' and (result == "" or result == None) ):
-            result = 'no'
-         elif ( key == 'sec_groups' and (result == 'yes' or result == 'y' or result == 'si' or result == 's' or result == 'sì') ):
-            result = {}
-            result[0] = 'default'
+            if ( key == 'boot_vlm_image' and (result == "" or result == None) ):
+               result = 'Debian-8.8.2'
+            if ( key == 'boot_vlm_size' and (result == "" or result == None) ):
+               result = '10'
+            elif ( key == 'flavor' and (result == "" or result == None) ):
+               result = 'idem-idpcloud'
+            elif ( key == 'data_vlm_size' and (result == 'yes' or result == 'y' or result == 'si' or result == 's') or result == 'sì'):
+               result = raw_input("Inserisci la dimensione, in GB, del disco dati della VM: ")
+            elif ( key == 'data_vlm_size' and (result == "" or result == None) ):
+               result = 'no'
+            elif ( key == 'sec_groups' and (result == 'yes' or result == 'y' or result == 'si' or result == 's' or result == 'sì') ):
+               result = {}
+               result[0] = 'default'
 
-            answer = 'yes'            
+               answer = 'yes'            
 
-            sec_grp_cnt = 1
-            while (answer != "n"):
-	
-               if ( answer == "y" or answer == "yes"):
-		  qst = "SECURITY GROUP #"+ str(sec_grp_cnt) +": "
-                  result[sec_grp_cnt] = raw_input(qst)
-                  sec_grp_cnt = sec_grp_cnt + 1
+               sec_grp_cnt = 1
+               while (answer != "n"):
+      
+                  if ( answer == "y" or answer == "yes"):
+                     qst = "SECURITY GROUP #"+ str(sec_grp_cnt) +": "
+                     result[sec_grp_cnt] = raw_input(qst)
+                     sec_grp_cnt = sec_grp_cnt + 1
 
-               answer = raw_input("Inserire un altro security group? (y|n): ")
+                  answer = raw_input("Inserire un altro security group? (y|n): ")
 
-         elif ( key == 'sec_groups' and (result == '' or result == None) ):
-            result = {}
-            result[0] = 'default'
+            elif ( key == 'sec_groups' and (result == '' or result == None) ):
+               result = {}
+               result[0] = 'default'
 
-      vals[key] = result
+         vals[key] = result
 
-   os_client_yml = open(DEST_OS_YML, "a+")
-   values = prepare(vals)
-   os_client_yml.write(values)
-   os_client_yml.close()
+      os_client_yml = open(os_client_dest, "a+")
+      values = prepare(vals)
+      os_client_yml.write(values)
+      os_client_yml.close()

@@ -13,12 +13,7 @@ from subprocess import check_output,call
 import uuid
 import hashlib
 
-### CONSTANTS
-IDP_LOGOS="/opt/idpcloud-data/ansible-shibboleth/roles/idp/files/restore"
-PLA_LOGO="/opt/idpcloud-data/ansible-shibboleth/roles/phpldapadmin/files/restore"
-LINK_YML_DEST="/opt/ansible-shibboleth/inventories/production/host_vars"
-
-### FUNCTIONS TO CREATE IDP YAML FILE ###
+### FUNCTIONS NEEDED TO CREATE IDP YAML FILE ###
 
 def get_random_color():
    return "#%06x" % random.randint(0, 0xFFFFFF)
@@ -31,10 +26,11 @@ def get_random_str(string_length):
 def get_basedn_from_domain(domain):
    return "dc="+domain.replace(".",",dc=")
 
-def create_idp_yml(idp_fqdn, ca_dest, yml_dest, idp_sealer_keystore_pw):
+def create_idp_yml(idp_fqdn, ca_dest, yml_dest, data_ans_shib, ans_shib, idp_sealer_keystore_pw):
    yml_file = yml_dest + '/' + idp_fqdn + ".yml"
+
    if (path.isfile(yml_file)):
-      print("IDP YAML FILE ALREADY CREATED:\n%s" % (yml_file))
+      print("IDP YAML FILE ALREADY EXISTS: %s" % (yml_file))
    else:
       question_dict = OrderedDict([
          ("mdui_displayName_it","Insert the Institution Name for the ITALIAN language: "),
@@ -54,7 +50,7 @@ def create_idp_yml(idp_fqdn, ca_dest, yml_dest, idp_sealer_keystore_pw):
          ("mdui_info_it","Insert the URL of the Information page valid for the Institution in ITALIAN language (press Enter to keep the default value): "),
          ("mdui_info_en","Insert the URL of the Information page valid for the Institution in ENGLISH language (press Enter to keep the default value): "),
          ("idp_support_email","Insert the User Support e-mail address for the Institutional IdP (press Enter to keep the default value 'idpcloud-service@example.org'): "),
-         ("idp_support_address","Insert the Institutional street address (press Enter to keep the default value 'missing address'): "),
+         ("idp_support_address","Insert your institution address (press Enter to provide it later): "),
          ("ca","1) TERENA_SSL_CA_2\n2) TERENA_SSL_CA_3\n\nChoose 1 or 2 (or press Enter for 'TERENA_SSL_CA_3'): "),
          ("idp_persistentId_salt","Insert the persistent-id salt (press Enter to generate a random value): "),
          ("idp_fticks_salt","Insert the f-ticks salt (press Enter to generate a random value): "),
@@ -104,106 +100,106 @@ def create_idp_yml(idp_fqdn, ca_dest, yml_dest, idp_sealer_keystore_pw):
                result = "https://"+idp_fqdn+"/it/info.html"
             elif(key == "mdui_info_en" and (result == "" or result == None)):
                result = "https://"+idp_fqdn+"/en/info.html"
-            # Caso del logo IT predefinito
+            # CASE 1: Default Italian Logo
             elif(key == "mdui_logo_it" and (result == "" or result == None)):
-               call(["mkdir","-p",IDP_LOGOS +'/'+idp_fqdn+'/styles/it'])
-               call(["mkdir","-p",PLA_LOGO +'/'+idp_fqdn+'/images'])
+               call(["mkdir","-p",data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/it'])
+               call(["mkdir","-p",data_ans_shib +'/roles/phpldapadmin/files/restore/'+ idp_fqdn +'/images'])
 
                url = "https://garr-idp-prod.irccs.garr.it/it/logo.png"
                r = requests.get(url)
-               with open(IDP_LOGOS + '/' + idp_fqdn + '/styles/it/logo.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/it/logo.png', 'wb') as f:
                   f.write(r.content)
 
-               with open(PLA_LOGO + '/' + idp_fqdn + '/images/logo.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/phpldapadmin/files/restore/'+ idp_fqdn +'/images/logo.png', 'wb') as f:
                   f.write(r.content)
 
-               result = "https://"+idp_fqdn+"/it/logo.png"
-            # Caso del logo IT fornito
+               result = "https://"+ idp_fqdn +"/it/logo.png"
+            # CASE 2: Italian Logo provided by the institution via HTTP/HTTPS location
             elif(key == "mdui_logo_it" and (result != "" or result != None)):
-               call(["mkdir","-p",IDP_LOGOS +'/'+idp_fqdn+'/styles/it'])
-               call(["mkdir","-p",PLA_LOGO +'/'+idp_fqdn+'/images'])
+               call(["mkdir","-p",data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/it'])
+               call(["mkdir","-p",data_ans_shib +'/roles/phpldapadmin/files/restore/'+ idp_fqdn +'/images'])
 
                url = result
                r = requests.get(url)
-               with open(IDP_LOGOS + '/' + idp_fqdn + '/styles/it/logo.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/it/logo.png', 'wb') as f:
                   f.write(r.content)
 
-               with open(PLA_LOGO + '/' + idp_fqdn + '/images/logo.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/phpldapadmin/files/restore/'+ idp_fqdn +'/images/logo.png', 'wb') as f:
                   f.write(r.content)
 
-               result = "https://"+idp_fqdn+"/it/logo.png"
-            # Caso del logo EN predefinito
+               result = "https://"+ idp_fqdn +"/it/logo.png"
+            # CASE 3: Default English Logo
             elif(key == "mdui_logo_en" and (result == "" or result == None)):
-               call(["mkdir","-p",IDP_LOGOS +'/'+idp_fqdn+'/styles/en'])
+               call(["mkdir","-p",data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/en'])
 
                url = "https://garr-idp-prod.irccs.garr.it/en/logo.png"
                r = requests.get(url)
-               with open(IDP_LOGOS + '/' + idp_fqdn + '/styles/en/logo.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/en/logo.png', 'wb') as f:
                   f.write(r.content)
 
-               result = "https://"+idp_fqdn+"/en/logo.png"
-            # Caso del logo EN fornito
+               result = "https://"+ idp_fqdn +"/en/logo.png"
+            # CASE 4: English Logo provided by the institution via HTTP/HTTPS location
             elif(key == "mdui_logo_en" and (result != "" or result != None)):
-               call(["mkdir","-p",IDP_LOGOS +'/'+idp_fqdn+'/styles/en'])
+               call(["mkdir","-p",data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/en'])
 
                url = result
                r = requests.get(url)
-               with open(IDP_LOGOS + '/' + idp_fqdn + '/styles/en/logo.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/en/logo.png', 'wb') as f:
                   f.write(r.content)
 
-               result = "https://"+idp_fqdn+"/en/logo.png"
-            # Cado della favicon IT predefinita
+               result = "https://"+ idp_fqdn +"/en/logo.png"
+            # CASE 5: Default Italian Favicon
             elif(key == "mdui_favicon_it" and (result == "" or result == None)):
-               call(["mkdir","-p",IDP_LOGOS +'/'+idp_fqdn+'/styles/it'])
-               call(["mkdir","-p",PLA_LOGO +'/'+idp_fqdn+'/images'])
+               call(["mkdir","-p",data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/it'])
+               call(["mkdir","-p",data_ans_shib +'/roles/phpldapadmin/files/restore/'+ idp_fqdn +'/images'])
 
                url = "https://garr-idp-prod.irccs.garr.it/it/favicon.png"
                r = requests.get(url)
-               with open(IDP_LOGOS + '/' + idp_fqdn + '/styles/it/favicon.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/it/favicon.png', 'wb') as f:
                   f.write(r.content)
 
-               with open(PLA_LOGO + '/' + idp_fqdn + '/images/favicon.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/phpldapadmin/files/restore/'+ idp_fqdn +'/images/favicon.png', 'wb') as f:
                   f.write(r.content)
 
-               result = "https://"+idp_fqdn+"/it/favicon.png"
-            # Caso della favicon IT fornita
+               result = "https://"+ idp_fqdn +"/it/favicon.png"
+            # CASE 6: Italian Favicon provided by the institution via HTTP/HTTPS location
             elif(key == "mdui_favicon_it" and (result != "" or result != None)):
-               call(["mkdir","-p",IDP_LOGOS +'/'+idp_fqdn+'/styles/it'])
-               call(["mkdir","-p",PLA_LOGO +'/'+idp_fqdn+'/images'])
+               call(["mkdir","-p",data_ans_shib +'/roles/idp/files/restore' +'/'+idp_fqdn+'/styles/it'])
+               call(["mkdir","-p",data_ans_shib +'/roles/phpldapadmin/files/restore/'+ idp_fqdn +'/images'])
 
                url = result
                r = requests.get(url)
-               with open(IDP_LOGOS + '/' + idp_fqdn + '/styles/it/favicon.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/it/favicon.png', 'wb') as f:
                   f.write(r.content)
 
-               with open(PLA_LOGO + '/' + idp_fqdn + '/images/favicon.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/phpldapadmin/files/restore/'+ idp_fqdn +'/images/favicon.png', 'wb') as f:
                   f.write(r.content)
 
-               result = "https://"+idp_fqdn+"/it/favicon.png"
-            # Caso della favicon EN predefinita
+               result = "https://"+ idp_fqdn +"/it/favicon.png"
+            # CASE 7: Default English Favicon
             elif(key == "mdui_favicon_en" and (result == "" or result == None)):
-               call(["mkdir","-p",IDP_LOGOS +'/'+idp_fqdn+'/styles/en'])
+               call(["mkdir","-p",data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/en'])
 
                url = "https://garr-idp-prod.irccs.garr.it/en/favicon.png"
                r = requests.get(url)
-               with open(IDP_LOGOS + '/' + idp_fqdn + '/styles/en/favicon.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/en/favicon.png', 'wb') as f:
                   f.write(r.content)
 
-               result = "https://"+idp_fqdn+"/en/favicon.png"
-            # Cado della favicon EN fornita
+               result = "https://"+ idp_fqdn +"/en/favicon.png"
+            # CASE 8: English Favicon provided by the institution via HTTP/HTTPS location
             elif(key == "mdui_favicon_en" and (result != "" or result != None)):
-               call(["mkdir","-p",IDP_LOGOS +'/'+idp_fqdn+'/styles/en'])
+               call(["mkdir","-p",data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/en'])
 
                url = result
                r = requests.get(url)
-               with open(IDP_LOGOS + '/' + idp_fqdn + '/styles/en/favicon.png', 'wb') as f:
+               with open(data_ans_shib +'/roles/idp/files/restore/'+ idp_fqdn +'/styles/en/favicon.png', 'wb') as f:
                   f.write(r.content)
 
-               result = "https://"+idp_fqdn+"/en/favicon.png"
+               result = "https://"+ idp_fqdn +"/en/favicon.png"
             elif(key == "idp_support_email" and (result == "" or result == None)):
-               result = "idpcloud-service@example.org"
+               result = "idpcloud-service@garr.it"
             elif(key == "idp_support_address" and (result == "" or result == None)):
-               result = "missing address"
+               result = "Mancante|Missing"
             elif(key == "footer_bkgr_color" and (result == "" or result == None)):
                result = get_random_color()
             elif(key == "idp_persistentId_salt" and (result == "" or result == None)):
@@ -233,16 +229,12 @@ def create_idp_yml(idp_fqdn, ca_dest, yml_dest, idp_sealer_keystore_pw):
 
       vals['sealer_keystore_password'] = idp_sealer_keystore_pw
 
-      # CREAZIONE YAML FILE PER L'IDP
+      # Create the IdP YAML file
       idp_yml = open(sys.path[0]+'/templates/createIDPyml.template', 'r').read()
 
       yaml = open(yml_dest + '/' + idp_fqdn + ".yml","w")
       yaml.write(Template(idp_yml).safe_substitute(vals))
       yaml.close()
 
-      # POSIZIONA IL LINK NEL POSTO GIUSTO
-      call(['ln','-s',PLA_LOGO + '/' + idp_fqdn, '/opt/ansible-shibboleth/roles/phpldapadmin/files/restore'])
-      call(['ln','-s',yml_dest + '/' + idp_fqdn + ".yml", LINK_YML_DEST])
-
-      # STAMPA "idm-admin" PASSWORD TO PROVIDE TO IDP MANAGER
+      # Print the "idm-admin" password to provide it to the IdP Manager
       print("IDM User: %s\nIDM Password: %s\n" % (vals['web_gui_user'], vals['web_gui_pw']))
