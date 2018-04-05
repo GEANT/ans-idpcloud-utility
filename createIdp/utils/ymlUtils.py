@@ -54,6 +54,7 @@ def create_idp_yml(idp_fqdn, ca_dest, yml_dest, idp_sealer_keystore_pw):
          ("mdui_info_it","Insert the URL of the Information page valid for the Institution in ITALIAN language (press Enter to keep the default value): "),
          ("mdui_info_en","Insert the URL of the Information page valid for the Institution in ENGLISH language (press Enter to keep the default value): "),
          ("idp_support_email","Insert the User Support e-mail address for the Institutional IdP (press Enter to keep the default value 'idpcloud-service@example.org'): "),
+         ("idp_support_address","Insert the Institutional street address (press Enter to keep the default value 'missing address'): "),
          ("ca","1) TERENA_SSL_CA_2\n2) TERENA_SSL_CA_3\n\nChoose 1 or 2 (or press Enter for 'TERENA_SSL_CA_3'): "),
          ("idp_persistentId_salt","Insert the persistent-id salt (press Enter to generate a random value): "),
          ("idp_fticks_salt","Insert the f-ticks salt (press Enter to generate a random value): "),
@@ -201,6 +202,8 @@ def create_idp_yml(idp_fqdn, ca_dest, yml_dest, idp_sealer_keystore_pw):
                result = "https://"+idp_fqdn+"/en/favicon.png"
             elif(key == "idp_support_email" and (result == "" or result == None)):
                result = "idpcloud-service@example.org"
+            elif(key == "idp_support_address" and (result == "" or result == None)):
+               result = "missing address"
             elif(key == "footer_bkgr_color" and (result == "" or result == None)):
                result = get_random_color()
             elif(key == "idp_persistentId_salt" and (result == "" or result == None)):

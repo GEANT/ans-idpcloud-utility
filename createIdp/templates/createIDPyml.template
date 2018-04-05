@@ -143,6 +143,7 @@ idp_contacts:
   givenName: "{{ idp_metadata['it']['mdui_displayName'] }}"
   surName: "User Support"
   mail: "$idp_support_email"
+  address: "$idp_support_address"
 
 ### Federation Metadata URL
 idp_metadata_providers:
