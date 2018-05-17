@@ -20,7 +20,7 @@ DATA = "/opt/idpcloud-data"
 DATA_ANS_SHIB = DATA + "/ansible-shibboleth"
 DATA_ANS_SHIB_INV = DATA_ANS_SHIB + "/inventories"
 DATA_ANS_SHIB_ROLES = DATA_ANS_SHIB + "/roles"
-DATA_ANS_VAULT_FILE = DATA + ".vault_pass"
+DATA_ANS_VAULT_FILE = DATA + "/.vault_pass"
 
 IDP_YML_DEST = DATA_ANS_SHIB_INV + "/production/host_vars"
 CSR_DEST_DATA = DATA_ANS_SHIB_ROLES + "/common/files"
@@ -58,6 +58,13 @@ if __name__ == "__main__":
      # Create the IdP YAML file
      utils.create_idp_yml(args.name,CSR_DEST_DATA+'/'+args.name,IDP_YML_DEST, DATA_ANS_SHIB, ANS_SHIB, idp_sealer_pw)
 
+     ans_shib_idp_yml_lnk = ANS_SHIB + "/inventories/production/host_vars/"+ args.name + ".yml"
+
+     if (os.path.islink(ans_shib_idp_yml_lnk)):
+        print ("IDP YAML already linked: %s" % ans_shib_idp_yml_lnk)
+     else:
+        print ("CREO LINK IN ANSIBLE-SHIBBOLETH")
+        os.system('ln -s %s.yml %s.yml' % (DATA_ANS_SHIB +"/inventories/production/host_vars/"+ args.name, ANS_SHIB +"/inventories/production/host_vars/"+ args.name))
     if (args.os):
      # Add new IdP to the /opt/ansible-openstack/inventories/production/group_vars/openstack-client.yml
      utils.create_openstack_client_yml(args.name, OS_CLIENT_DEST)
@@ -100,7 +107,8 @@ if __name__ == "__main__":
       if (os.path.islink(ans_shib_idp_yml_lnk)):
          print ("IDP YAML already linked: %s" % ans_shib_idp_yml_lnk)
       else:
-         os.system('ln -s %s/%s.yml %s/%s.yml' % (DATA_ANS_SHIB +"/inventories/production/host_vars", args.name, ANS_SHIB +"/inventories/production/host_vars", args.name))
+         print ("CREO LINK IN ANSIBLE-SHIBBOLETH")
+         os.system('ln -s %s.yml %s.yml' % (DATA_ANS_SHIB +"/inventories/production/host_vars/"+ args.name, ANS_SHIB +"/inventories/production/host_vars/"+ args.name))
 
       # Add new IdP to the /opt/ansible-openstack/inventories/production/group_vars/openstack-client.yml
       utils.create_openstack_client_yml(args.name, OS_CLIENT_DEST)
