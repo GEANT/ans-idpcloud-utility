@@ -31,90 +31,90 @@ OS_CLIENT_DEST= DATA + "/ansible-openstack/inventories/production/group_vars/ope
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser()
-   parser.add_argument("-n", "--name", help="Provide the FQDN", action="store", default="")
-   parser.add_argument("-f", "--force", help="Force regeneration YML file", action="store_true", default=False)
-   parser.add_argument("-r", "--req_info", help="Set C,ST,L,O,OU? [y|n]", action="store", default="n")
-   parser.add_argument("-s", "--san", help="SANS", action="store", nargs='*', default="")
-   parser.add_argument("-c", "--csr", help="Generate SSL CSR and SSL Key Only", action="store_true", default=False)
-   parser.add_argument("-y", "--yml", help="Generate IdP YML file Only", action="store_true", default=False)
-   parser.add_argument("-o", "--os", help="Generate OS YML file Only", action="store_true", default=False)
-   parser.add_argument("-e", "--everything", help="Generate SSL credentials, IdP and OS YML files", action="store_true", default=False)
+   parser.add_argument("--fqdn", help="Provide the FQDN", action="store", default="")
+   parser.add_argument("--entityID", help="Provide the entityID for the IdP", action="store", default="")
+   parser.add_argument("--force", help="Force regeneration ansible-shibboleth YML file", action="store_true", default=False)
+   parser.add_argument("--req_info", help="Set C,ST,L,O,OU? [y|n]", action="store", default="n")
+   parser.add_argument("--san", help="SANS", action="store", nargs='*', default="")
+   parser.add_argument("--csr", help="Generate SSL CSR and SSL Key Only", action="store_true", default=False)
+   parser.add_argument("--yml", help="Generate IdP YML file Only", action="store_true", default=False)
+   parser.add_argument("--os", help="Generate OS YML file Only", action="store_true", default=False)
+   parser.add_argument("--everything", help="Generate SSL credentials, IdP and OS YML files", action="store_true", default=False)
    args = parser.parse_args()
   
-   if(args.name and not(args.csr == args.yml == args.os == args.everything == args.test == False)):
+   if(args.fqdn and not(args.csr == args.yml == args.os == args.everything == False)):
     if(args.force):
-     os.remove(IDP_YML_LNK_DEST+'/'+args.name+'.yml')
-     os.remove(IDP_YML_DEST+'/'+args.name+'.yml')
-     os.remove(PLA_DEST+'/'+args.name)
+     os.remove(IDP_YML_LNK_DEST+'/'+args.fqdn+'.yml')
+     os.remove(IDP_YML_DEST+'/'+args.fqdn+'.yml')
+     os.remove(PLA_DEST+'/'+args.fqdn)
  
     if (args.csr):
      #Create CSR and KEY for the IdP
-     utils.generate_csr(args.name, args.req_info, CSR_DEST_DATA, args.san)
+     utils.generate_csr(args.fqdn, args.req_info, CSR_DEST_DATA, args.san)
 
     if (args.yml):
      # Create or Retrieve the Shibboleth IdP sealer/keystore password
-     idp_sealer_pw = utils.get_sealer_keystore_pw(args.name, DATA_ANS_SHIB, DATA_ANS_VAULT_FILE, False)
+     idp_sealer_pw = utils.get_sealer_keystore_pw(args.fqdn, args.entityID, DATA_ANS_SHIB, DATA_ANS_VAULT_FILE, False)
 
      # Create the IdP YAML file
-     utils.create_idp_yml(args.name,CSR_DEST_DATA+'/'+args.name,IDP_YML_DEST, DATA_ANS_SHIB, ANS_SHIB, idp_sealer_pw)
+     utils.create_idp_yml(args.fqdn, args.entityID ,CSR_DEST_DATA+'/'+args.fqdn,IDP_YML_DEST, DATA_ANS_SHIB, ANS_SHIB, idp_sealer_pw, DATA_ANS_VAULT_FILE)
 
-     ans_shib_idp_yml_lnk = ANS_SHIB + "/inventories/production/host_vars/"+ args.name + ".yml"
-
+     ans_shib_idp_yml_lnk = IDP_YML_LNK_DEST + "/" + args.fqdn + ".yml"
+ 
      if (os.path.islink(ans_shib_idp_yml_lnk)):
         print ("IDP YAML already linked: %s" % ans_shib_idp_yml_lnk)
      else:
-        print ("CREO LINK IN ANSIBLE-SHIBBOLETH")
-        os.system('ln -s %s.yml %s.yml' % (DATA_ANS_SHIB +"/inventories/production/host_vars/"+ args.name, ANS_SHIB +"/inventories/production/host_vars/"+ args.name))
+        os.system('ln -s %s/%s.yml %s/%s.yml' % (IDP_YML_DEST, args.fqdn, IDP_YML_LNK_DEST, args.fqdn))
+
     if (args.os):
      # Add new IdP to the /opt/ansible-openstack/inventories/production/group_vars/openstack-client.yml
-     utils.create_openstack_client_yml(args.name, OS_CLIENT_DEST)
+     utils.create_openstack_client_yml(args.fqdn, OS_CLIENT_DEST)
 
     # If I run script with only "--name" I have to follow all steps
     if (args.everything):
       # Create CSR and KEY for the IdP in the DATA directory
-      utils.generate_csr(args.name, args.req_info, CSR_DEST_DATA, args.san)
+      utils.generate_csr(args.fqdn, args.req_info, CSR_DEST_DATA, args.san)
  
       # Create link on the ansible-shibboleth main dir
-      ans_shib_idp_https_cred_lnk = CSR_DEST +"/"+ args.name
+      ans_shib_idp_https_cred_lnk = CSR_DEST +"/"+ args.fqdn
 
       if (os.path.islink(ans_shib_idp_https_cred_lnk)):
          print ("IDP HTTPS Credentials directory already linked: %s" % ans_shib_idp_https_cred_lnk)
       else:
-         os.system('ln -s %s/%s %s/%s' % (CSR_DEST_DATA, args.name, CSR_DEST, args.name))
+         os.system('ln -s %s/%s %s/%s' % (CSR_DEST_DATA, args.fqdn, CSR_DEST, args.fqdn))
 
       # Create or Retrieve the Shibboleth IdP sealer/keystore password
-      idp_sealer_pw = utils.get_sealer_keystore_pw(args.name, DATA_ANS_SHIB, DATA_ANS_VAULT_FILE, False)
+      idp_sealer_pw = utils.get_sealer_keystore_pw(args.fqdn, args.entityID, DATA_ANS_SHIB, DATA_ANS_VAULT_FILE, False)
 
       # Create link on the ansible-shibboleth/roles/idp/restore dir
-      ans_shib_idp_restore_lnk = ANS_SHIB + "/roles/idp/files/restore"+ args.name
+      ans_shib_idp_restore_lnk = ANS_SHIB_ROLES + "/idp/files/restore/"+ args.fqdn
 
       if (os.path.islink(ans_shib_idp_restore_lnk)):
          print ("IDP restore directory already linked: %s" % ans_shib_idp_restore_lnk)
       else:
-         os.system('ln -s %s/%s %s/%s' % (DATA_ANS_SHIB + "/roles/idp/files/restore", args.name, ANS_SHIB + "/roles/idp/files/restore", args.name))
+         os.system('ln -s %s/%s %s/%s' % (DATA_ANS_SHIB + "/roles/idp/files/restore", args.fqdn, ANS_SHIB + "/roles/idp/files/restore", args.fqdn))
 
       # Create the IdP YAML file
-      utils.create_idp_yml(args.name,CSR_DEST_DATA+'/'+args.name,IDP_YML_DEST, DATA_ANS_SHIB, ANS_SHIB, idp_sealer_pw)
+      utils.create_idp_yml(args.fqdn, args.entityID, CSR_DEST_DATA+'/'+args.fqdn, IDP_YML_DEST, DATA_ANS_SHIB, ANS_SHIB, idp_sealer_pw, DATA_ANS_VAULT_FILE)
 
-      ans_shib_pla_idp_dir_lnk = ANS_SHIB +"/roles/phpldapadmin/files/restore/"+ args.name
-      ans_shib_idp_yml_lnk = ANS_SHIB + "/inventories/production/host_vars/"+ args.name + ".yml"
+      ans_shib_pla_idp_dir_lnk = ANS_SHIB_ROLES + "/phpldapadmin/files/restore/" + args.fqdn
+      ans_shib_idp_yml_lnk = IDP_YML_LNK_DEST + "/"+ args.fqdn + ".yml"
  
       if (os.path.islink(ans_shib_pla_idp_dir_lnk)):
          print ("phpLDAPadmin IDP directory already linked: %s" % ans_shib_pla_idp_dir_lnk)
       else:
-         os.system('ln -s %s/%s %s/%s' % (DATA_ANS_SHIB + '/roles/phpldapadmin/files/restore', args.name, ANS_SHIB + "/roles/phpldapadmin/files/restore", args.name))
+         os.system('ln -s %s/%s %s/%s' % (DATA_ANS_SHIB + '/roles/phpldapadmin/files/restore', args.fqdn, ANS_SHIB + "/roles/phpldapadmin/files/restore", args.fqdn))
 
       if (os.path.islink(ans_shib_idp_yml_lnk)):
          print ("IDP YAML already linked: %s" % ans_shib_idp_yml_lnk)
       else:
-         print ("CREO LINK IN ANSIBLE-SHIBBOLETH")
-         os.system('ln -s %s.yml %s.yml' % (DATA_ANS_SHIB +"/inventories/production/host_vars/"+ args.name, ANS_SHIB +"/inventories/production/host_vars/"+ args.name))
+         os.system('ln -s %s/%s.yml %s/%s.yml' % (IDP_YML_DEST, args.fqdn, IDP_YML_LNK_DEST, args.fqdn))
 
       # Add new IdP to the /opt/ansible-openstack/inventories/production/group_vars/openstack-client.yml
-      utils.create_openstack_client_yml(args.name, OS_CLIENT_DEST)
+      utils.create_openstack_client_yml(args.fqdn, OS_CLIENT_DEST)
 
       # Copy italian and english flags on the new IdP dir
-      os.system('cp -nr %s/idp/files/restore/sample-FQDN-dir/* %s/idp/files/restore/%s' % (ANS_SHIB_ROLES,DATA_ANS_SHIB_ROLES,args.name))
+      os.system('cp -nr %s/idp/files/restore/sample-FQDN-dir/* %s/idp/files/restore/%s' % (ANS_SHIB_ROLES,DATA_ANS_SHIB_ROLES,args.fqdn))
    else:
-      print("!!! FQDN(--name) or other is missing!!!\n")
+      print("!!! FQDN(--fqdn) or generation's mode missing !!!\n")
       parser.print_help()
