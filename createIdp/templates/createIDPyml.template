@@ -112,6 +112,8 @@ idp_login:
 ### IDP Metadata Variables
 idp_federation_regAuth: "http://www.idem.garr.it/"
 
+idp_entityID: "https://{{ fqdn }}/idp/shibboleth"
+
 idp_metadata:
  en:
   mdui_displayName: "$mdui_displayName_en"
