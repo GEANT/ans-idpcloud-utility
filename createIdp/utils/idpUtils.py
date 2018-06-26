@@ -17,9 +17,17 @@ os.environ["JAVA_HOME"] = "/usr/lib/jvm/default-java/jre"
 
 ### FUNCTION NEEDED TO CREATE IDP METADATA CREDENTIALS
 
-def get_sealer_keystore_pw(idp_fqdn, dest, ans_vault_file, debug):
+def get_sealer_keystore_pw(idp_fqdn, idp_entityID, dest, ans_vault_file, debug):
+
+   if(idp_entityID):
+      entityID = idp_entityID
+   else:
+      entityID = "https://" + idp_fqdn + "/idp/shibboleth"
 
    idp_cred_pw = check_output(shlex.split("openssl rand -base64 27")).strip()
+
+   if(debug):
+      print("IdP Credentials password : %s" % idp_cred_pw)
 
    ### Create IDP Credentials DIR
    credentials_dir = dest + "/roles/idp/files/restore/"+ idp_fqdn +"/credentials"
@@ -42,10 +50,15 @@ def get_sealer_keystore_pw(idp_fqdn, dest, ans_vault_file, debug):
 
    if (not sealer_jks and not sealer_kver):
       call(["./seckeygen.sh", "--alias", "secret", "--storefile", credentials_dir + "/sealer.jks", "--storepass", idp_cred_pw, "--versionfile", credentials_dir + "/sealer.kver"], cwd=idp_bin_dir)
-
-   if (debug):
-      print("IdP Sealer JKS created into: %s" % sealer_jks)
-      print("IdP Sealer KVER created into: %s" % sealer_kver)
+      ## Encrypt KEY with Ansible Vault
+      # Needed to avoid output of 'call' commands
+      FNULL = open(os.devnull, 'w')
+      call(["ansible-vault", "encrypt", "sealer.jks", "--vault-password-file", ans_vault_file], cwd=credentials_dir, stdout=FNULL)
+      FNULL.close()
+   else:
+      if (debug):
+         print("IdP Sealer JKS created into: %s" % sealer_jks)
+         print("IdP Sealer KVER created into: %s" % sealer_kver)
 
    ## Generate IDP Backchannel Certificate
 
@@ -54,11 +67,16 @@ def get_sealer_keystore_pw(idp_fqdn, dest, ans_vault_file, debug):
    backchannel_crt = check_output(shlex.split('find '+credentials_dir+' -name "idp-backchannel.crt"')).strip()
 
    if (not backchannel_p12 and not backchannel_crt):
-      call(["./keygen.sh", "--storefile", credentials_dir + "/idp-backchannel.p12", "--storepass", idp_cred_pw, "--hostname", idp_fqdn, "--lifetime", "30", "--uriAltName", "https://" + idp_fqdn + "/idp/shibboleth", "--certfile", credentials_dir + "/idp-backchannel.crt"], cwd=idp_bin_dir)
-
-   if (debug):
-      print("IdP Backchannel PCKS12 created into: %s" % backchannel_p12)
-      print("IdP Backchannel Certificate created into: %s" % backchannel_crt)
+      call(["./keygen.sh", "--storefile", credentials_dir + "/idp-backchannel.p12", "--storepass", idp_cred_pw, "--hostname", idp_fqdn, "--lifetime", "30", "--uriAltName", entityID, "--certfile", credentials_dir + "/idp-backchannel.crt"], cwd=idp_bin_dir)
+      ## Encrypt KEY with Ansible Vault
+      # Needed to avoid output of 'call' commands
+      FNULL = open(os.devnull, 'w')
+      call(["ansible-vault", "encrypt", "idp-backchannel.p12", "--vault-password-file", ans_vault_file], cwd=credentials_dir, stdout=FNULL)
+      FNULL.close()
+   else:
+      if (debug):
+         print("IdP Backchannel PCKS12 created into: %s" % backchannel_p12)
+         print("IdP Backchannel Certificate created into: %s" % backchannel_crt)
 
    ### Generate IDP Signing Certificate and Key
 
@@ -67,7 +85,16 @@ def get_sealer_keystore_pw(idp_fqdn, dest, ans_vault_file, debug):
    signing_key = check_output(shlex.split('find '+credentials_dir+' -name "idp-signing.key"')).strip()
 
    if (not signing_crt and not signing_key):
-      call(["./keygen.sh", "--hostname", idp_fqdn, "--lifetime", "30", "--uriAltName", "https://" + idp_fqdn + "/idp/shibboleth", "--certfile", credentials_dir + "/idp-signing.crt", "--keyfile", credentials_dir + "/idp-signing.key"], cwd=idp_bin_dir)
+      call(["./keygen.sh", "--hostname", idp_fqdn, "--lifetime", "30", "--uriAltName", entityID, "--certfile", credentials_dir + "/idp-signing.crt", "--keyfile", credentials_dir + "/idp-signing.key"], cwd=idp_bin_dir)
+      ## Encrypt KEY with Ansible Vault
+      # Needed to avoid output of 'call' commands
+      FNULL = open(os.devnull, 'w')
+      call(["ansible-vault", "encrypt", "idp-signing.key", "--vault-password-file", ans_vault_file], cwd=credentials_dir, stdout=FNULL)
+      FNULL.close()
+   else:
+      if (debug):
+         print("IdP Signing Certificate created into: %s" % signing_crt)
+         print("IdP Signing Key created into: %s" % signing_key)
 
    ### Generate IDP Encryption Certificate and Key
 
@@ -76,27 +103,35 @@ def get_sealer_keystore_pw(idp_fqdn, dest, ans_vault_file, debug):
    encryption_key = check_output(shlex.split('find '+credentials_dir+' -name "idp-encryption.key"')).strip()
 
    if (not encryption_crt and not encryption_key):
-      call(["./keygen.sh", "--hostname", idp_fqdn, "--lifetime", "30", "--uriAltName", "https://" + idp_fqdn + "/idp/shibboleth", "--certfile", credentials_dir + "/idp-encryption.crt", "--keyfile", credentials_dir + "/idp-encryption.key"], cwd=idp_bin_dir)
-
-   if (debug):
-      print("IdP Signing Certificate created into: %s" % signing_crt)
-      print("IdP Signing Key created into: %s" % signing_key)
-      print("IdP Encryption Certificate created into: %s" % encryption_crt)
-      print("IdP Encryption Key created into: %s" % encryption_key)
-
+      call(["./keygen.sh", "--hostname", idp_fqdn, "--lifetime", "30", "--uriAltName", entityID, "--certfile", credentials_dir + "/idp-encryption.crt", "--keyfile", credentials_dir + "/idp-encryption.key"], cwd=idp_bin_dir)
+      ## Encrypt KEY with Ansible Vault
+      # Needed to avoid output of 'call' commands
+      FNULL = open(os.devnull, 'w')
+      call(["ansible-vault", "encrypt", "idp-encryption.key", "--vault-password-file", ans_vault_file], cwd=credentials_dir, stdout=FNULL)
+      FNULL.close()
+   else:
+      if (debug):
+         print("IdP Encryption Certificate created into: %s" % encryption_crt)
+         print("IdP Encryption Key created into: %s" % encryption_key)
 
    ### Generate a file containing the Credentials Password
 
    if (not sealer_jks and not sealer_kver) and (not backchannel_p12 and not backchannel_crt) and (not signing_crt and not signing_key) and (not encryption_crt and not encryption_key):
-      file = open(credentials_dir+"/"+idp_fqdn+"_pw.txt","w")
-      file.write(idp_cred_pw)
-      file.close
+      idp_cred_pw_file = open(credentials_dir+"/"+idp_fqdn+"_pw.txt","w")
+      idp_cred_pw_file.write(idp_cred_pw)
+      idp_cred_pw_file.close()
+
+      ## Encrypt password with Ansible Vault
+      # Needed to avoid output of 'call' commands
+      FNULL = open(os.devnull, 'w')
+      call(["ansible-vault", "encrypt", credentials_dir+"/"+idp_fqdn+"_pw.txt", "--vault-password-file", ans_vault_file], cwd=credentials_dir, stdout=FNULL)
+      FNULL.close()
       return idp_cred_pw
 
    else:
-      file = open(credentials_dir+"/"+idp_fqdn+"_pw.txt","r")
-      idp_cred_pw = file.read()
-      file.close()
+      idp_cred_pw_file = open(credentials_dir+"/"+idp_fqdn+"_pw.txt","r")
+      idp_cred_pw = idp_cred_pw_file.read()
+      idp_cred_pw_file.close()
       if "ANSIBLE_VAULT" in idp_cred_pw:
          idp_cred_pw = check_output(shlex.split('ansible-vault view --vault-password-file '+ ans_vault_file+' '+ credentials_dir+'/'+idp_fqdn+'_pw.txt')).strip()
          return idp_cred_pw
