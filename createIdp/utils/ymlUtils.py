@@ -3,7 +3,6 @@
 
 from string import Template
 from base64 import b64encode
-from os import urandom
 import random
 from os import path 
 import sys
@@ -26,7 +25,7 @@ def get_random_str(string_length):
 def get_basedn_from_domain(domain):
    return "dc="+domain.replace(".",",dc=")
 
-def create_idp_yml(idp_fqdn, ca_dest, yml_dest, data_ans_shib, ans_shib, idp_sealer_keystore_pw):
+def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, data_ans_shib, ans_shib, idp_sealer_keystore_pw, ans_vault_file):
    yml_file = yml_dest + '/' + idp_fqdn + ".yml"
 
    if (path.isfile(yml_file)):
@@ -68,6 +67,11 @@ def create_idp_yml(idp_fqdn, ca_dest, yml_dest, data_ans_shib, ans_shib, idp_sea
       vals = {}
 
       vals['fqdn'] = idp_fqdn
+      
+      if(idp_entityID):
+         vals['entityID'] = idp_entityID
+      else:
+         vals['entityID'] = "https://" + idp_fqdn + "/idp/shibboleth"
 
       for key,question in question_dict.iteritems():
 
@@ -235,6 +239,12 @@ def create_idp_yml(idp_fqdn, ca_dest, yml_dest, data_ans_shib, ans_shib, idp_sea
       yaml = open(yml_dest + '/' + idp_fqdn + ".yml","w")
       yaml.write(Template(idp_yml).safe_substitute(vals))
       yaml.close()
+      
+      ## Encrypt password with Ansible Vault
+      # Needed to avoid output of 'call' commands
+      FNULL = open(os.devnull, 'w')
+      call(["ansible-vault", "encrypt", idp_fqdn+".yml", "--vault-password-file", ans_vault_file], cwd=yml_dest, stdout=FNULL)
+      FNULL.close()
 
       # Print the "idm-admin" password to provide it to the IdP Manager
       print("IDM User: %s\nIDM Password: %s\n" % (vals['web_gui_user'], vals['web_gui_pw']))
