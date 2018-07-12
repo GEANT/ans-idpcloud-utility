@@ -32,7 +32,7 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, data_ans_shib, ans
    if (path.isfile(yml_file)):
       print("\nIDP YAML FILE ALREADY EXISTS: %s" % (yml_file))
    else:
-      question_dict = get_yml_orderedDict('it-IT')
+      question_dict = get_yml_orderedDict('en-GB')
 
       vals = {}
 

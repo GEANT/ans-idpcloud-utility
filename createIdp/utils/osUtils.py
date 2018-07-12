@@ -23,7 +23,7 @@ def create_openstack_client_yml(idp_fqdn, os_client_dest_prod, os_client_dest_de
       if(idp_fqdn in open(os_client_dest_dev).read()):
          print("\nYour IdP '%s' is already loaded on the Development 'openstack-client.yml' file." % idp_fqdn)
    else:
-      question_dict = utils.get_os_orderedDict('it-IT')
+      question_dict = utils.get_os_orderedDict('en-GB')
 
       vals = {}
 
