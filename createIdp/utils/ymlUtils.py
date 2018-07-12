@@ -3,14 +3,15 @@
 
 from string import Template
 from base64 import b64encode
-import random
+import os
 from os import path 
+import random
 import sys
-from collections import OrderedDict
 import requests
 from subprocess import check_output,call
 import uuid
 import hashlib
+import utils
 
 ### FUNCTIONS NEEDED TO CREATE IDP YAML FILE ###
 
@@ -29,45 +30,14 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, data_ans_shib, ans
    yml_file = yml_dest + '/' + idp_fqdn + ".yml"
 
    if (path.isfile(yml_file)):
-      print("IDP YAML FILE ALREADY EXISTS: %s" % (yml_file))
+      print("\nIDP YAML FILE ALREADY EXISTS: %s" % (yml_file))
    else:
-      question_dict = OrderedDict([
-         ("mdui_displayName_it","Insert the Institution Name for the ITALIAN language: "),
-         ("mdui_displayName_en","Insert the Institution Name for the ENGLISH language: "),
-         ("domain","Insert the Institution domain: "),
-         ("org_url_it","Insert the Institution site for the ITALIAN language: "),
-         ("org_url_en","Insert the Institution site for the ENGLISH language: "),
-         ("mdui_logo_it","Insert the URL HTTPS of the Institution Logo (160x120) for the ITALIAN language (press Enter to keep the default value): "),
-         ("mdui_logo_en","Insert the URL HTTPS of the Institution Logo (160x120) for the ENGLISH language (press Enter to keep the default value): "),
-         ("mdui_favicon_it","Insert the URL HTTPS of the Institution Favicon (32x32) for the ITALIAN language (press Enter to keep the default value): "),
-         ("mdui_favicon_en","Insert the URL HTTPS of the Institution Favicon (32x32) for the ENGLISH language (press Enter to keep the default value): "),
-         ("footer_bkgr_color","Insert the hexadecimal color of the institution (press Enter to generate a random value): "),
-         ("mdui_description_it","Insert Institution IdP description for the ITALIAN language (press Enter to keep the default value): "),
-         ("mdui_description_en","Insert Institution IdP description for the ENGLISH language (press Enter to keep the default value): "),
-         ("mdui_privacy_it","Insert the URL of the Privacy Policy page valid for the Institution in ITALIAN language (press Enter to keep the default value): "),
-         ("mdui_privacy_en","Insert the URL of the Privacy Policy page valid for the Institution in ENGLIS language (press Enter to keep the default value): "),
-         ("mdui_info_it","Insert the URL of the Information page valid for the Institution in ITALIAN language (press Enter to keep the default value): "),
-         ("mdui_info_en","Insert the URL of the Information page valid for the Institution in ENGLISH language (press Enter to keep the default value): "),
-         ("idp_support_email","Insert the User Support e-mail address for the Institutional IdP (press Enter to keep the default value 'idpcloud-service@example.org'): "),
-         ("idp_support_address","Insert your institution address (press Enter to provide it later): "),
-         ("ca","1) TERENA_SSL_CA_2\n2) TERENA_SSL_CA_3\n\nChoose 1 or 2 (or press Enter for 'TERENA_SSL_CA_3'): "),
-         ("idp_persistentId_salt","Insert the persistent-id salt (press Enter to generate a random value): "),
-         ("idp_fticks_salt","Insert the f-ticks salt (press Enter to generate a random value): "),
-         ("web_gui_user","Insert the username of the user who will have access to the IdP IDM (press Enter to keep the default value 'idm-admin'): "),
-         ("web_gui_pw","Insert the password of the user who will have access to the IdP IDM (press Enter to generate a random value): "),
-         ("root_ldap_pw","Insert the openLDAP root password (press Enter to generate a random value): "),
-         ("mysql_root_password","Insert the MySQL root password (press Enter to generate a random value): "),
-         ("shibboleth_db_password","Insert the 'shibboleth' user password (press Enter to generate a random value): "),
-         ("bindDNCredential","Insert the 'idpuser' user password (press Enter to generate a random value): "),
-         ("idp_stats_db_pw","Insert the 'statistics' user password (press Enter to generate a random value): "),
-         ("flup_secret_key","Insert the secret key used by FLUP (press Enter to generate a random value): "),
-         ("idpcloud_idm","Insert 'spuid' to use 'schacPersonalUniqueID' or\nInsert 'email' to use the email address\nto recognize the user on the FLUP application (press Enter to keep 'spuid'): "),
-      ])
+      question_dict = get_yml_orderedDict('it-IT')
 
       vals = {}
 
       vals['fqdn'] = idp_fqdn
-      
+
       if(idp_entityID):
          vals['entityID'] = idp_entityID
       else:
@@ -206,6 +176,8 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, data_ans_shib, ans
                result = "Mancante|Missing"
             elif(key == "footer_bkgr_color" and (result == "" or result == None)):
                result = get_random_color()
+            elif(key == "idp_type" and (result == "" or result == None)):
+               result = "Debian-IdP-with-IdM-GARR"
             elif(key == "idp_persistentId_salt" and (result == "" or result == None)):
                result = get_random_str(64)
             elif(key == "idp_fticks_salt" and (result == "" or result == None)):
@@ -239,7 +211,7 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, data_ans_shib, ans
       yaml = open(yml_dest + '/' + idp_fqdn + ".yml","w")
       yaml.write(Template(idp_yml).safe_substitute(vals))
       yaml.close()
-      
+
       ## Encrypt password with Ansible Vault
       # Needed to avoid output of 'call' commands
       FNULL = open(os.devnull, 'w')
@@ -248,3 +220,5 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, data_ans_shib, ans
 
       # Print the "idm-admin" password to provide it to the IdP Manager
       print("IDM User: %s\nIDM Password: %s\n" % (vals['web_gui_user'], vals['web_gui_pw']))
+
+      return vals['idp_type']

@@ -10,6 +10,7 @@ import sys
 
 ANS_SHIB = "/opt/ansible-shibboleth"
 ANS_SHIB_INV = ANS_SHIB + "/inventories"
+ANS_SHIB_INV_PROD = ANS_SHIB_INV + "/production"
 ANS_SHIB_ROLES = ANS_SHIB + "/roles"
 
 IDP_YML_LNK_DEST = ANS_SHIB_INV + "/production/host_vars"
@@ -19,13 +20,15 @@ PLA_DEST = ANS_SHIB_ROLES + "/phpldapadmin/files/restore"
 DATA = "/opt/idpcloud-data"
 DATA_ANS_SHIB = DATA + "/ansible-shibboleth"
 DATA_ANS_SHIB_INV = DATA_ANS_SHIB + "/inventories"
+DATA_ANS_SHIB_INV_PROD = DATA_ANS_SHIB_INV+'/production'
 DATA_ANS_SHIB_ROLES = DATA_ANS_SHIB + "/roles"
 DATA_ANS_VAULT_FILE = DATA + "/.vault_pass"
 
 IDP_YML_DEST = DATA_ANS_SHIB_INV + "/production/host_vars"
 CSR_DEST_DATA = DATA_ANS_SHIB_ROLES + "/common/files"
 
-OS_CLIENT_DEST= DATA + "/ansible-openstack/inventories/production/group_vars/openstack-client.yml"
+OS_CLIENT_DEST_PROD = DATA + "/ansible-openstack/inventories/production/group_vars/openstack-client.yml"
+OS_CLIENT_DEST_DEV = DATA + "/ansible-openstack/inventories/development/group_vars/openstack-client.yml"
 
 # END CONSTANTS
 
@@ -49,14 +52,14 @@ if __name__ == "__main__":
      os.remove(PLA_DEST+'/'+args.fqdn)
  
     if (args.csr):
-     #Create CSR and KEY for the IdP
+     #Create CSR and KEY for the IdP if not exists on the CSR_DEST_DATA
      utils.generate_csr(args.fqdn, args.req_info, CSR_DEST_DATA, args.san)
 
     if (args.yml):
      # Create or Retrieve the Shibboleth IdP sealer/keystore password
      idp_sealer_pw = utils.get_sealer_keystore_pw(args.fqdn, args.entityID, DATA_ANS_SHIB, DATA_ANS_VAULT_FILE, False)
 
-     # Create the IdP YAML file
+     # Create the IdP YAML file and ecrypt it with Ansible Vault
      utils.create_idp_yml(args.fqdn, args.entityID ,CSR_DEST_DATA+'/'+args.fqdn,IDP_YML_DEST, DATA_ANS_SHIB, ANS_SHIB, idp_sealer_pw, DATA_ANS_VAULT_FILE)
 
      ans_shib_idp_yml_lnk = IDP_YML_LNK_DEST + "/" + args.fqdn + ".yml"
@@ -68,7 +71,8 @@ if __name__ == "__main__":
 
     if (args.os):
      # Add new IdP to the /opt/ansible-openstack/inventories/production/group_vars/openstack-client.yml
-     utils.create_openstack_client_yml(args.fqdn, OS_CLIENT_DEST)
+     #             and on /opt/ansible-openstack/inventories/development/group_vars/openstack-client.yml
+     utils.create_openstack_client_yml(args.fqdn, OS_CLIENT_DEST_PROD, OS_CLIENT_DEST_DEV)
 
     # If I run script with only "--name" I have to follow all steps
     if (args.everything):
@@ -95,7 +99,18 @@ if __name__ == "__main__":
          os.system('ln -s %s/%s %s/%s' % (DATA_ANS_SHIB + "/roles/idp/files/restore", args.fqdn, ANS_SHIB + "/roles/idp/files/restore", args.fqdn))
 
       # Create the IdP YAML file
-      utils.create_idp_yml(args.fqdn, args.entityID, CSR_DEST_DATA+'/'+args.fqdn, IDP_YML_DEST, DATA_ANS_SHIB, ANS_SHIB, idp_sealer_pw, DATA_ANS_VAULT_FILE)
+      idp_type = utils.create_idp_yml(args.fqdn, args.entityID, CSR_DEST_DATA+'/'+args.fqdn, IDP_YML_DEST, DATA_ANS_SHIB, ANS_SHIB, idp_sealer_pw, DATA_ANS_VAULT_FILE)
+
+      # Add the new IdP on the production.ini file
+      utils.add_idp_to_inventory(args.fqdn, idp_type, DATA_ANS_SHIB_INV_PROD + '/production.ini')
+
+      # Create the link /opt/ansible-shibboleth/inventories/production/production.ini
+      ans_shib_prod_inv_lnk = ANS_SHIB_INV_PROD + "/production.ini"
+
+      if (os.path.islink(ans_shib_prod_inv_lnk)):
+         print ("IDP restore directory already linked: %s" % ans_shib_prod_inv_lnk)
+      else:
+         os.system('ln -s %s %s/%s' % (DATA_ANS_SHIB_INV_PROD + "/production.ini", ANS_SHIB_INV_PROD + "/production.ini"))
 
       ans_shib_pla_idp_dir_lnk = ANS_SHIB_ROLES + "/phpldapadmin/files/restore/" + args.fqdn
       ans_shib_idp_yml_lnk = IDP_YML_LNK_DEST + "/"+ args.fqdn + ".yml"
@@ -111,7 +126,7 @@ if __name__ == "__main__":
          os.system('ln -s %s/%s.yml %s/%s.yml' % (IDP_YML_DEST, args.fqdn, IDP_YML_LNK_DEST, args.fqdn))
 
       # Add new IdP to the /opt/ansible-openstack/inventories/production/group_vars/openstack-client.yml
-      utils.create_openstack_client_yml(args.fqdn, OS_CLIENT_DEST)
+      utils.create_openstack_client_yml(args.fqdn, OS_CLIENT_DEST_PROD, OS_CLIENT_DEST_DEV)
 
       # Copy italian and english flags on the new IdP dir
       os.system('cp -nr %s/idp/files/restore/sample-FQDN-dir/* %s/idp/files/restore/%s' % (ANS_SHIB_ROLES,DATA_ANS_SHIB_ROLES,args.fqdn))

@@ -112,7 +112,7 @@ idp_login:
 ### IDP Metadata Variables
 idp_federation_regAuth: "http://www.idem.garr.it/"
 
-idp_entityID: "https://{{ fqdn }}/idp/shibboleth"
+idp_entityID: "$entityID"
 
 idp_metadata:
  en:
@@ -186,10 +186,10 @@ idp_stats:
 ### CHECK_MK Monitoring Server
 check_mk:
  check_idp: "true"
- srv: "###_checkmk.full.qualified.domain.name_###"
+ srv: "checkmk.aai.garr.it"
  site: "idpcloud"
  api_user_name: "apiuser"
- api_user_secret: "###_YOUR_APIUSER_SECRET_KEY_###"
+ api_user_secret: "NTCKHJMMGVQDKWSVBJME"
  folder: "idp-all-in-one"
  spEntityID: "https://sp24-test.garr.it/shibboleth"
  testuser: "testuser"

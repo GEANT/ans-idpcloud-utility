@@ -2,9 +2,9 @@
 # coding=utf-8
 
 import os
-from collections import OrderedDict
 from subprocess import check_output,call
 from jinja2 import Environment, FileSystemLoader
+import utils
 
 ### FUNCTIONS TO CREATE IDP YAML FILE ###
 
@@ -15,20 +15,15 @@ def prepare(vals):
    result = j2_env.get_template('templates/openstack-client.yml.j2').render(j2_vals=vals)
    return result
 
-def create_openstack_client_yml(idp_fqdn, os_client_dest):
+def create_openstack_client_yml(idp_fqdn, os_client_dest_prod, os_client_dest_dev):
 
-   if(idp_fqdn in open(os_client_dest).read()):
-      print("\nOpenstack Client YAML file is already configured for your '%s' IDP." % idp_fqdn)
+   if(idp_fqdn in open(os_client_dest_prod).read()):
+      print("\nYour IdP '%s' is already loaded on the Production 'openstack-client.yml' file." % idp_fqdn)
+      
+      if(idp_fqdn in open(os_client_dest_dev).read()):
+         print("\nYour IdP '%s' is already loaded on the Development 'openstack-client.yml' file." % idp_fqdn)
    else:
-      question_dict = OrderedDict([
-         ("ip_priv","Inserisci l'IP Privato della VM: "),
-         ("ip_pub","Inserisci l'IP Pubblico della VM: "),
-         ("boot_vlm_size","Inserisci la dimensione, in GB, del disco di boot della VM: (default: 10)"),
-         ("boot_vlm_image","Inserisci la distribuzione che verrà installata sulla VM (default: Debian-8.8.2): "),
-         ("flavor","Inserisci il flavor della VM (default: idem-idpcloud): "),
-         ("data_vlm_size","Vuoi aggiungere un ulteriore volume persistente? (default: no): "),
-         ("sec_groups","Aggiungere security groups aggiuntivi oltre a default? (default: no): "),
-      ])
+      question_dict = utils.get_os_orderedDict('it-IT')
 
       vals = {}
 
@@ -42,13 +37,13 @@ def create_openstack_client_yml(idp_fqdn, os_client_dest):
             result = raw_input(question)
 
             if ( key == 'boot_vlm_image' and (result == "" or result == None) ):
-               result = 'Debian-8.8.2'
+               result = 'Debian-8.10.10'
             if ( key == 'boot_vlm_size' and (result == "" or result == None) ):
                result = '10'
             elif ( key == 'flavor' and (result == "" or result == None) ):
                result = 'idem-idpcloud'
             elif ( key == 'data_vlm_size' and (result == 'yes' or result == 'y' or result == 'si' or result == 's') or result == 'sì'):
-               result = raw_input("Inserisci la dimensione, in GB, del disco dati della VM: ")
+               result = raw_input("Insert the data disk size, in GB, for the VM: ")
             elif ( key == 'data_vlm_size' and (result == "" or result == None) ):
                result = 'no'
             elif ( key == 'sec_groups' and (result == 'yes' or result == 'y' or result == 'si' or result == 's' or result == 'sì') ):
@@ -65,7 +60,7 @@ def create_openstack_client_yml(idp_fqdn, os_client_dest):
                      result[sec_grp_cnt] = raw_input(qst)
                      sec_grp_cnt = sec_grp_cnt + 1
 
-                  answer = raw_input("Inserire un altro security group? (y|n): ")
+                  answer = raw_input("Do you want to insert another security group? (y|n): ")
 
             elif ( key == 'sec_groups' and (result == '' or result == None) ):
                result = {}
@@ -73,7 +68,12 @@ def create_openstack_client_yml(idp_fqdn, os_client_dest):
 
          vals[key] = result
 
-      os_client_yml = open(os_client_dest, "a+")
+      os_client_yml = open(os_client_dest_prod, "a+")
+      values = prepare(vals)
+      os_client_yml.write(values)
+      os_client_yml.close()
+
+      os_client_yml = open(os_client_dest_dev, "a+")
       values = prepare(vals)
       os_client_yml.write(values)
       os_client_yml.close()

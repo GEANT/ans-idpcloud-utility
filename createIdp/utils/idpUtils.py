@@ -114,14 +114,13 @@ def get_sealer_keystore_pw(idp_fqdn, idp_entityID, dest, ans_vault_file, debug):
          print("IdP Encryption Certificate created into: %s" % encryption_crt)
          print("IdP Encryption Key created into: %s" % encryption_key)
 
-   ### Generate a file containing the Credentials Password
+   ### Generate a file containing the Credentials Password encrypted with Ansible Vault to be able to upload it on a private GIT
 
    if (not sealer_jks and not sealer_kver) and (not backchannel_p12 and not backchannel_crt) and (not signing_crt and not signing_key) and (not encryption_crt and not encryption_key):
       idp_cred_pw_file = open(credentials_dir+"/"+idp_fqdn+"_pw.txt","w")
       idp_cred_pw_file.write(idp_cred_pw)
       idp_cred_pw_file.close()
 
-      ## Encrypt password with Ansible Vault
       # Needed to avoid output of 'call' commands
       FNULL = open(os.devnull, 'w')
       call(["ansible-vault", "encrypt", credentials_dir+"/"+idp_fqdn+"_pw.txt", "--vault-password-file", ans_vault_file], cwd=credentials_dir, stdout=FNULL)
