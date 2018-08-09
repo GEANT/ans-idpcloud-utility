@@ -4,13 +4,28 @@
 ### Machine Variables
 
 fqdn: "$fqdn"
+files_dir: "/opt/ansible-shibboleth/inventories/files"
 
-## For self-signed certs use ca: "{{ fqdn }}.crt"
+### Common Variables
+### For self-signed certs use ca: "{{ fqdn }}.crt"
 common:
+ ssl: "True"
  ca: "$ca"
  ssl_cert: "{{ fqdn }}.crt"
  ssl_key: "{{ fqdn }}.key"
+ swap:
+  name_swapfile: "swapfile"
+  size_swapfile: "2048"
+  state: present
+ mirror: "https://mi.mirror.garr.it/mirrors/debian/"
 
+### NTP Variables
+my_timezone: Europe/Rome
+ntp1: ntp1.inrim.it
+ntp2: ntp2.inrim.it
+ntp3: 0.it.pool.ntp.org
+
+### Apache Variables
 apache:
  admin_email: "{{ idp_contacts['technical']['mail'] }}"
 
@@ -34,16 +49,6 @@ idp_db_restore: "false"
 
 mysql:
  root_password: "$mysql_root_password"
-
-### RSYSLOG Server
-rsyslog_srv:
- ip: "192.168.80.8"
- port: "20514"
-
-### MYSQL/LDAP Backups Server with path
-backups_srv:
- ip: "192.168.80.9"
- remote_path: "/data/var/local/backups"
 
 ### IDP Variables
 idp_config:
@@ -84,6 +89,11 @@ idp_login:
  footer_text_color: "#ffffff"
  footer_background_color: "$footer_bkgr_color"
  idp_url_password_reset: "{{ url_password_reset }}"
+ aup:
+  en:
+   aupUrl: "https://www.garr.it/en/acceptable-use-policies"
+  it:
+   aupUrl: "https://www.garr.it/it/regole-di-utilizzo-della-rete-aup"
  footer:
   en:
    text: "<p>The <strong>{{ idp_metadata['en']['mdui_displayName'] }}</strong>, now is a part of <strong>IDEM</strong> (<strong>IDE</strong>ntity <strong>M</strong>anagement for the access federated) to realize the Italian Authentication and Authorization Infrastructure on the GARR network.</p><p>The credentials to provide access from this authentication system (Identity Provider) are released only to employees and researchers of the institution.</p>"
@@ -149,19 +159,6 @@ idp_contacts:
 
 ### Federation Metadata URL
 idp_metadata_providers:
- - id: "EDUGAIN2IDEM-FEDERATION"
-   file: "edugain2idem-metadata-sha256.xml"
-   url: "http://www.garr.it/idem-metadata/edugain2idem-metadata-sha256.xml"
-   maxValidInterval: "P5D"
-   disregardTLSCertificate: "false"
-   pubKey: |
-    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxrLc3bV+zC7cATqGoI9R
-    WO8LKiXk4pMez0JcMgXICiKA/5hJ2WgtIbDHqfqSz1oFsmqXNEEgR3cKkHK9fsaY
-    G4hOXcSWHExjjQK/9QuiTUZsOZAyE9JxTonV/1vnbpH0qz4FthliYFFf2CqalfVH
-    zrsgRLjP4mFedevkrwdM+N9oMaHbE5EvqaxePDAMmBokI6kEJy0u8JZyZSnS5ymX
-    xUcaMUAAjkRvqnBAQQ+PXKpbnaCAz4Ac0VjpsAL1FftC/wyidBnBek00E0v5RycY
-    tUFe0F+13jOrtfE8030X8SV7dgkZo5WTxwIQm3lJ9N6C7NRoDKHx/8F8SzoLC5wJ
-    KwIDAQAB
  - id: "IDEM-TEST-FEDERATION"
    file: "idem-test-metadata-sha256.xml"
    url: "http://www.garr.it/idem-metadata/idem-test-metadata-sha256.xml"
@@ -183,26 +180,6 @@ idp_stats:
  fed_site: "https://www.idem.garr.it/"
  db_pw: "$idp_stats_db_pw"
 
-### CHECK_MK Monitoring Server
-check_mk:
- check_idp: "true"
- srv: "checkmk.aai.garr.it"
- site: "idpcloud"
- api_user_name: "apiuser"
- api_user_secret: "NTCKHJMMGVQDKWSVBJME"
- folder: "idp-all-in-one"
- spEntityID: "https://sp24-test.garr.it/shibboleth"
- testuser: "testuser"
- baseDN: "{{ idp_config['ldap']['baseDN'] }}"
- searchuser: "{{ idp_config['ldap']['bindDN'] }}"
- searchuser_pw: "{{ idp_config['ldap']['bindDNCredential'] }}"
- userid_attr: "uid"
- ldap_url: "{{ idp_config['ldap']['url'] }}"
- ldap_useStartTLS: "{{ idp_config['ldap']['useStartTLS'] }}"
- idp_scope: "{{ idp_config['scope'] }}"
- check_rs: "{{ idp_config['sup_rs'] }}"
- check_coco: "{{ idp_config['sup_coco'] }}"
-
 ### phpLDAPadmin Variables
 pla:
  orgUrl: "{{ idp_metadata['it']['org_url'] }}"
@@ -216,18 +193,3 @@ pla:
   root_pw: "{{ ldap['root_pw'] }}"
  web_gui_user: "$web_gui_user"
  web_gui_pw: "$web_gui_pw"
-
-### RSYNC Variables
-rsync:
- config:
-  ssh_pub_key: "{{ lookup('file', '/opt/ansible-shibboleth/roles/rsync/files/ssh/ssh_pub_key') }}"
-  ssh_priv_key: "{{ lookup('file', '/opt/ansible-shibboleth/roles/rsync/files/ssh/ssh_priv_key') }}"
-
-### idpcloud_garr Variables
-idpcloud_garr:
- idm: "$idpcloud_idm"
-
-### FLUP Variables
-flup:
- secret_key: "$flup_secret_key"
- activation_key: "$idpcloud_idm"

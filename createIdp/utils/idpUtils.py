@@ -30,7 +30,7 @@ def get_sealer_keystore_pw(idp_fqdn, idp_entityID, dest, ans_vault_file, debug):
       print("IdP Credentials password : %s" % idp_cred_pw)
 
    ### Create IDP Credentials DIR
-   credentials_dir = dest + "/roles/idp/files/restore/"+ idp_fqdn +"/credentials"
+   credentials_dir = dest
    call(["mkdir", "-p", credentials_dir])
 
    if(debug):

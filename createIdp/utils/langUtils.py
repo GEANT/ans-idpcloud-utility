@@ -79,7 +79,7 @@ def get_yml_orderedDict(lang):
                ("mdui_description_it","Insert Institution IdP description for the ITALIAN language (press Enter to keep the default value): "),
                ("mdui_description_en","Insert Institution IdP description for the ENGLISH language (press Enter to keep the default value): "),
                ("mdui_privacy_it","Insert the URL of the Privacy Policy page valid for the Institution in ITALIAN language (press Enter to keep the default value): "),
-               ("mdui_privacy_en","Insert the URL of the Privacy Policy page valid for the Institution in ENGLIS language (press Enter to keep the default value): "),
+               ("mdui_privacy_en","Insert the URL of the Privacy Policy page valid for the Institution in ENGLISH language (press Enter to keep the default value): "),
                ("mdui_info_it","Insert the URL of the Information page valid for the Institution in ITALIAN language (press Enter to keep the default value): "),
                ("mdui_info_en","Insert the URL of the Information page valid for the Institution in ENGLISH language (press Enter to keep the default value): "),
                ("idp_support_email","Insert the User Support e-mail address for the Institutional IdP (press Enter to keep the default value 'idpcloud-service@example.org'): "),

@@ -8,15 +8,14 @@ import os
 ### FUNCTIONS NEEDED TO CREATE CSR/KEY HTTPS (PYTHON 2.7)
 
 # Generate Certificate Signing Request (CSR)
-def generate_csr(nodename, req_info, dest, sans = []):
-   if not os.path.exists(dest + '/' + nodename):
-      os.makedirs(dest + '/' + nodename)
+def generate_csr(fqdn, req_info, dest, sans = []):
+   if not os.path.exists(dest + '/' + fqdn + '.key'):
+      os.makedirs(dest)
 
-      dest = dest + '/' + nodename
+      # These variables will be used to create the fqdn.csr and fqdn.key files.
+      csrfile = dest + '/' + fqdn + '.csr'
+      keyfile = dest + '/' + fqdn + '.key'
 
-      # These variables will be used to create the nodename.csr and nodename.key files.
-      csrfile = dest + '/' + nodename + '.csr'
-      keyfile = dest + '/' + nodename + '.key'
       # OpenSSL Key Type Variable, passed in later.
       TYPE_RSA = crypto.TYPE_RSA
 
@@ -27,7 +26,7 @@ def generate_csr(nodename, req_info, dest, sans = []):
       ss = ", ".join(ss)
 
       req = crypto.X509Req()
-      req.get_subject().CN = nodename
+      req.get_subject().CN = fqdn
 
       if(req_info == 'y' or req_info == 'Y' or req_info == 'yes' or req_info == 'Yes'):
         C, ST, L, O, OU = get_csr_subjects()
@@ -59,7 +58,7 @@ def generate_csr(nodename, req_info, dest, sans = []):
 
       return req
    else:
-      print("\nCSR and KEY already created in: %s/%s" % (dest,nodename) )
+      print("\nCSR and KEY already created in: %s" % (dest) )
       return 0
 
 def get_csr_subjects():

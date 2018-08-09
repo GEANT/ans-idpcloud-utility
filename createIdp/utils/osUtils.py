@@ -17,6 +17,7 @@ def prepare(vals):
 
 def create_openstack_client_yml(idp_fqdn, os_client_dest_prod, os_client_dest_dev):
 
+   # Development Environment is used to run the Ansible recipes only for the IdP configuration created.
    if(idp_fqdn in open(os_client_dest_prod).read()):
       print("\nYour IdP '%s' is already loaded on the Production 'openstack-client.yml' file." % idp_fqdn)
       
