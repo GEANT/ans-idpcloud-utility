@@ -26,11 +26,20 @@ def get_random_str(string_length):
 def get_basedn_from_domain(domain):
    return "dc="+domain.replace(".",",dc=")
 
-def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, idp_styles_dir, idp_pla_files_dir, idp_sealer_keystore_pw, ans_vault_file):
+def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files, idp_pla_files_dir, idp_sealer_keystore_pw, ans_vault_file):
 
    if (path.isfile(yml_dest)):
       print("\nIDP YAML FILE ALREADY EXISTS: %s" % (yml_dest))
    else:
+      idp_pla_files_dir = ans_shib_inv_files + '/' + idp_fqdn + '/phpldapadmin/images'
+      idp_sample_pla_files_dir = ans_shib_inv_files + '/sample-FQDN-dir/phpldapadmin/images'
+
+      idp_styles_en_dir = ans_shib_inv_files + '/' + idp_fqdn + '/idp/styles/en'
+      idp_styles_it_dir = ans_shib_inv_files + '/' + idp_fqdn + '/idp/styles/it'
+
+      idp_sample_en_dir = ans_shib_inv_files + '/sample-FQDN-dir/idp/styles/en'
+      idp_sample_it_dir = ans_shib_inv_files + '/sample-FQDN-dir/idp/styles/it'
+
       question_dict = utils.get_yml_orderedDict('en-GB')
 
       vals = {}
@@ -62,121 +71,101 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, idp_styles_dir, id
             elif(key == "domain"):
                vals['basedn'] = get_basedn_from_domain(result)
             elif(key == "mdui_description_it" and (result == "" or result == None)):
-               result = "Identity provider per gli utenti di "+vals['mdui_displayName_it']
+               result = "Identity provider per gli utenti di " + vals['mdui_displayName_it']
             elif(key == "mdui_description_en" and (result == "" or result == None)):
-               result = "Identity provider for "+vals['mdui_displayName_en']+" users"
+               result = "Identity provider for " + vals['mdui_displayName_en']+" users"
             elif(key == "mdui_privacy_it" and (result == "" or result == None)):
-               result = "https://"+idp_fqdn+"/it/privacy.html"
+               result = "https://" + idp_fqdn + "/it/privacy.html"
             elif(key == "mdui_privacy_en" and (result == "" or result == None)):
-               result = "https://"+idp_fqdn+"/en/privacy.html"
+               result = "https://" + idp_fqdn + "/en/privacy.html"
             elif(key == "mdui_info_it" and (result == "" or result == None)):
-               result = "https://"+idp_fqdn+"/it/info.html"
+               result = "https://" + idp_fqdn + "/it/info.html"
             elif(key == "mdui_info_en" and (result == "" or result == None)):
-               result = "https://"+idp_fqdn+"/en/info.html"
+               result = "https://" + idp_fqdn + "/en/info.html"
             # CASE 1: Default Italian Logo
             elif(key == "mdui_logo_it" and (result == "" or result == None)):
-               call(["mkdir","-p",idp_styles_dir + '/it'])
-
-               url = "https://garr-idp-prod.irccs.garr.it/it/logo.png"
-               r = requests.get(url)
-               with open(idp_styles_dir + '/it/logo.png', 'wb') as f:
-                  f.write(r.content)
+               call(["mkdir","-p", idp_styles_it_dir])
+               call(["cp",idp_sample_it_dir + "/logo.png", idp_styles_it_dir + '/logo.png'])
 
                result = "https://"+ idp_fqdn +"/it/logo.png"
             # CASE 2: Italian Logo provided by the institution via HTTP/HTTPS location
             elif(key == "mdui_logo_it" and (result != "" or result != None)):
-               call(["mkdir","-p",idp_styles_dir + '/it'])
+               call(["mkdir","-p", idp_styles_it_dir])
 
                url = result
                r = requests.get(url)
-               with open(idp_styles_dir + '/it/logo.png', 'wb') as f:
+               with open(idp_styles_it_dir + '/logo.png', 'wb') as f:
                   f.write(r.content)
 
                result = "https://"+ idp_fqdn +"/it/logo.png"
             # CASE 3: Default English Logo
             elif(key == "mdui_logo_en" and (result == "" or result == None)):
-               call(["mkdir","-p",idp_styles_dir + '/en'])
-               call(["mkdir","-p",idp_pla_files_dir + '/images'])
-
-               url = "https://garr-idp-prod.irccs.garr.it/en/logo.png"
-               r = requests.get(url)
-               with open(idp_styles_dir + '/en/logo.png', 'wb') as f:
-                  f.write(r.content)
-
-               with open(idp_pla_files_dir + '/images/logo.png', 'wb') as f:
-                  f.write(r.content)
+               call(["mkdir","-p", idp_styles_en_dir])
+               call(["mkdir","-p", idp_pla_files_dir])
+               call(["cp", idp_sample_en_dir + "/logo.png", idp_styles_en_dir + '/logo.png'])
+               call(["cp", idp_sample_en_dir + "/logo.png", idp_pla_files_dir + '/logo.png'])
 
                result = "https://"+ idp_fqdn +"/en/logo.png"
             # CASE 4: English Logo provided by the institution via HTTP/HTTPS location
             elif(key == "mdui_logo_en" and (result != "" or result != None)):
-               call(["mkdir","-p",idp_styles_dir + '/en'])
-               call(["mkdir","-p",idp_pla_files_dir + '/images'])
+               call(["mkdir","-p",idp_styles_en_dir])
+               call(["mkdir","-p",idp_pla_files_dir ])
 
                url = result
                r = requests.get(url)
-               with open(idp_styles_dir + '/en/logo.png', 'wb') as f:
+               with open(idp_styles_en_dir + '/logo.png', 'wb') as f:
                   f.write(r.content)
 
-               with open(idp_pla_files_dir + '/images/logo.png', 'wb') as f:
+               with open(idp_pla_files_dir + '/logo.png', 'wb') as f:
                   f.write(r.content)
 
                result = "https://"+ idp_fqdn +"/en/logo.png"
             # CASE 5: Default Italian Favicon
             elif(key == "mdui_favicon_it" and (result == "" or result == None)):
-               call(["mkdir","-p", idp_styles_dir + '/it'])
-
-               url = "https://garr-idp-prod.irccs.garr.it/it/favicon.png"
-               r = requests.get(url)
-               with open(idp_styles_dir + '/it/favicon.png', 'wb') as f:
-                  f.write(r.content)
+               call(["mkdir","-p", idp_styles_it_dir])
+               call(["cp",idp_sample_it_dir + "/favicon.png", idp_styles_it_dir + '/favicon.png'])
 
                result = "https://"+ idp_fqdn +"/it/favicon.png"
             # CASE 6: Italian Favicon provided by the institution via HTTP/HTTPS location
             elif(key == "mdui_favicon_it" and (result != "" or result != None)):
-               call(["mkdir","-p",idp_styles_dir + '/it'])
+               call(["mkdir","-p", idp_styles_it_dir])
 
                url = result
                r = requests.get(url)
-               with open(idp_styles_dir + '/it/favicon.png', 'wb') as f:
+               with open(idp_styles_it_dir + '/favicon.png', 'wb') as f:
                   f.write(r.content)
 
                result = "https://"+ idp_fqdn +"/it/favicon.png"
             # CASE 7: Default English Favicon
             elif(key == "mdui_favicon_en" and (result == "" or result == None)):
-               call(["mkdir","-p",idp_styles_dir + '/en'])
-               call(["mkdir","-p",idp_pla_files_dir + '/images'])
-
-               url = "https://garr-idp-prod.irccs.garr.it/en/favicon.png"
-               r = requests.get(url)
-               with open(idp_styles_dir + '/en/favicon.png', 'wb') as f:
-                  f.write(r.content)
-
-               with open(idp_pla_files_dir + '/images/favicon.png', 'wb') as f:
-                  f.write(r.content)
+               call(["mkdir","-p", idp_styles_en_dir])
+               call(["mkdir","-p", idp_pla_files_dir])
+               call(["cp", idp_sample_en_dir + "/favicon.png", idp_styles_en_dir + '/favicon.png'])
+               call(["cp", idp_sample_en_dir + "/favicon.png", idp_pla_files_dir + '/favicon.png'])
 
                result = "https://"+ idp_fqdn +"/en/favicon.png"
             # CASE 8: English Favicon provided by the institution via HTTP/HTTPS location
             elif(key == "mdui_favicon_en" and (result != "" or result != None)):
-               call(["mkdir","-p",idp_styles_dir + '/en'])
-               call(["mkdir","-p",idp_pla_files_dir + '/images'])
+               call(["mkdir","-p",idp_styles_en_dir])
+               call(["mkdir","-p",idp_pla_files_dir])
 
                url = result
                r = requests.get(url)
-               with open(idp_styles_dir + '/en/favicon.png', 'wb') as f:
+               with open(idp_styles_en_dir + '/favicon.png', 'wb') as f:
                   f.write(r.content)
 
-               with open(idp_pla_files_dir + '/images/favicon.png', 'wb') as f:
+               with open(idp_pla_files_dir + '/favicon.png', 'wb') as f:
                   f.write(r.content)
 
                result = "https://"+ idp_fqdn +"/en/favicon.png"
             elif(key == "idp_support_email" and (result == "" or result == None)):
-               result = "idpcloud-service@garr.it"
+               result = "idpcloud-service@example.org"
             elif(key == "idp_support_address" and (result == "" or result == None)):
                result = "Mancante|Missing"
             elif(key == "footer_bkgr_color" and (result == "" or result == None)):
                result = get_random_color()
             elif(key == "idp_type" and (result == "" or result == None)):
-               result = "Debian-IdP-with-IdM-GARR"
+               result = "Debian-IdP-with-IdM"
             elif(key == "idp_persistentId_salt" and (result == "" or result == None)):
                result = get_random_str(64)
             elif(key == "idp_fticks_salt" and (result == "" or result == None)):

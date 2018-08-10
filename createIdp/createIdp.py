@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
    # CONSTANTS END
 
-   if(args.fqdn and not(args.csr == args.yml == args.os == args.everything == False)):
+   if(args.fqdn and not(args.csr == args.yml == args.everything == False)):
     if(args.force):
      os.remove(IDP_YML)
      shutil.rmtree(IDP_FILES_DIR)
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # If I run the script with "--fqdn" and "--csr"
     if (args.csr):
      #Create CSR and KEY for the IdP, if not exist, in IDP_SSL_DEST
-     utils.generate_csr(args.fqdn, args.req_info, IDP_SSL_DIR, args.san)
+     utils.generate_csr(args.fqdn, IDP_SSL_DIR)
 
     # If I run the script with "--fqdn" and "--yml"
     if (args.yml):
@@ -58,13 +58,13 @@ if __name__ == "__main__":
     # If I run script with "--fqdn" and "--everything" I have to follow all steps
     if (args.everything):
       # Create CSR and KEY for the IdP, if not exist, in the IDP_SSL_DEST directory
-      utils.generate_csr(args.fqdn, args.req_info, IDP_SSL_DIR, args.san)
+      utils.generate_csr(args.fqdn, IDP_SSL_DIR)
  
       # Create or Retrieve the Shibboleth IdP sealer/keystore password
       idp_sealer_pw = utils.get_sealer_keystore_pw(args.fqdn, args.entityID, IDP_CRED_DIR, ANS_VAULT_FILE, False)
 
       # Create the IdP YAML file
-      idp_type = utils.create_idp_yml(args.fqdn, args.entityID, IDP_SSL_DIR, IDP_YML, IDP_FILES_DIR + '/idp/styles', IDP_FILES_DIR + '/phpldapadmin', idp_sealer_pw, ANS_VAULT_FILE)
+      idp_type = utils.create_idp_yml(args.fqdn, args.entityID, IDP_SSL_DIR, IDP_YML, ANS_SHIB_INV_FILES, IDP_FILES_DIR + '/phpldapadmin', idp_sealer_pw, ANS_VAULT_FILE)
 
       # Add the new IdP on the production.ini file
       utils.add_idp_to_inventory(args.fqdn, idp_type, ANS_SHIB_INV_PROD + '/production.ini')
@@ -82,6 +82,10 @@ if __name__ == "__main__":
       # Create 'idp/conf' dir with its content
       os.system('cp -nr %s/idp/conf %s/idp/conf' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
       
+      # Create 'idp/conf/authn' & 'idp/conf/c14n' dir with its content
+      os.system('mkdir %s/idp/conf/authn' % (IDP_FILES_DIR))
+      os.system('mkdir %s/idp/conf/c14n' % (IDP_FILES_DIR))
+
       # Create 'openldap' dir with its content
       os.system('cp -nr %s/openldap %s/openldap' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
 

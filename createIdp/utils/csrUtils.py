@@ -8,7 +8,7 @@ import os
 ### FUNCTIONS NEEDED TO CREATE CSR/KEY HTTPS (PYTHON 2.7)
 
 # Generate Certificate Signing Request (CSR)
-def generate_csr(fqdn, req_info, dest, sans = []):
+def generate_csr(fqdn, dest, req_info = '', sans = []):
    if not os.path.exists(dest + '/' + fqdn + '.key'):
       os.makedirs(dest)
 
