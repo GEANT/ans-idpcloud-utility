@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 
+### Function needed to manage Inventory files ###
+
 def add_idp_to_inventory(idp_fqdn, idp_type, inventory_ini_file):
    from ConfigParser import SafeConfigParser
    
