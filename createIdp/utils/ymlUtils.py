@@ -28,7 +28,7 @@ def get_random_str(string_length):
 def get_basedn_from_domain(domain):
    return "dc="+domain.replace(".",",dc=")
 
-def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, idp_styles_dir, idp_pla_files_dir, idp_sealer_keystore_pw, ans_vault_file):
+def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files, idp_pla_files_dir, idp_sealer_keystore_pw, ans_vault_file):
 
    if (path.isfile(yml_dest)):
       logging.debug("IdP YAML file already exist at: %s" % (yml_dest))
@@ -54,6 +54,7 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, idp_styles_dir, id
          while (result == "" or result == None):
             result = raw_input(question)
 
+<<<<<<< HEAD
             if (key == "ca"):
                checkUrl = validators.url(result)
                while not(checkUrl == True):
@@ -175,7 +176,7 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, idp_styles_dir, id
                with open(idp_styles_dir + '/en/logo.png', 'wb') as f:
                   f.write(r.content)
 
-               with open(idp_pla_files_dir + '/images/logo.png', 'wb') as f:
+               with open(idp_pla_files_dir + '/logo.png', 'wb') as f:
                   f.write(r.content)
              
                result = "https://"+ idp_fqdn +"/en/logo.png"

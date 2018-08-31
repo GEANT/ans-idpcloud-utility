@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # If I run the script with "--fqdn" and "--csr"
     if (args.csr):
      logging.debug("Creating SSL CSR and KEY for '%s' ..." % (args.fqdn))
-     #Create CSR and KEY for the IdP, if not exist, in IDP_SSL_DEST
+     # Create CSR and KEY for the IdP, if not exist, in IDP_SSL_DEST
      utils.generate_csr(args.fqdn, IDP_SSL_DIR)
      logging.debug("...SSL CSR and KEY created.")
 
@@ -74,6 +74,7 @@ if __name__ == "__main__":
     if (args.everything):
      logging.debug("Creating all needed files for '%s' IdP ..." % (args.fqdn))
      logging.debug("Creating SSL CSR and KEY ...")
+
      # Create CSR and KEY for the IdP, if not exist, in the IDP_SSL_DEST directory
      utils.generate_csr(args.fqdn, IDP_SSL_DIR)
      logging.debug("...SSL CSR and KEY created.")
