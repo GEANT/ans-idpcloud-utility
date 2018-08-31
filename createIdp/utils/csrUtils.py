@@ -4,11 +4,12 @@
 # Libraries/Modules
 from OpenSSL import crypto, SSL
 import os
+import logging
 
 ### FUNCTIONS NEEDED TO CREATE CSR/KEY HTTPS (PYTHON 2.7)
 
 # Generate Certificate Signing Request (CSR)
-def generate_csr(fqdn, req_info, dest, sans = []):
+def generate_csr(fqdn, dest, req_info = 'No', sans = []):
    if not os.path.exists(dest + '/' + fqdn + '.key'):
       os.makedirs(dest)
 
@@ -58,7 +59,7 @@ def generate_csr(fqdn, req_info, dest, sans = []):
 
       return req
    else:
-      print("\nCSR and KEY already created in: %s" % (dest) )
+      logging.debug("CSR and KEY for %s are already created in: %s" % (fqdn,dest))
       return 0
 
 def get_csr_subjects():
@@ -111,5 +112,5 @@ def generate_files(mkFile, request):
        f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, request))
        f.close()
    else:
-       print "Failed to create CSR/Key files"
+       logging.debug("Failed to create CSR/Key files for %s" % (dest))
        exit()

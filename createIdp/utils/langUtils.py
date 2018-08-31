@@ -49,8 +49,8 @@ def get_yml_orderedDict(lang):
                ("mdui_info_en","Inserisci la pagina Informativa per l'IdP in INGLESE (premi 'Invio' per tenere il valore predefinito): "),
                ("idp_support_email","Inserisci la mail di supporto per gli utenti dell'IdP istituzionale (premi 'Invio' per tenere il valore 'idpcloud-service@garr.it'): "),
                ("idp_support_address","Inserisci l'indirizzo postale dell'istituzione (premi 'Invio' per inserire in futuro): "),
-               ("idp_type","Inserisci 'Debian-IdP-with-IdM-GARR' o 'Debian-IdP-without-IdM': (premi 'Invio' per 'Debian-IdP-with-IdM-GARR'): "),
-               ("ca","1) TERENA_SSL_CA_2\n2) TERENA_SSL_CA_3\n\nScegli 1 o 2 (o premi 'Invio' 'TERENA_SSL_CA_3'): "),
+               ("idp_type","Inserisci 'Debian-IdP-with-IdM' o 'Debian-IdP-without-IdM': (premi 'Invio' per 'Debian-IdP-with-IdM'): "),
+               ("ca","Inserisci la URL dove recuperare la CA, in formato PEM, utilizzata per creare il certificato e la chiave SSL per l'IdP. Esempi:\n1) https://www.terena.org/activities/tcs/repository/sha2/TERENA_SSL_CA_2.pem\n2) https://www.terena.org/activities/tcs/repository-g3/TERENA_SSL_CA_3.pem\nDigita la URL: "),
                ("idp_persistentId_salt","Inserisci il persistent-id salt da applicare (premi 'Invio' per generare un valore casuale): "),
                ("idp_fticks_salt","Inserisci il salt per gli f-ticks da applicare (premi 'Invio' per generare un valore casuale): "),
                ("web_gui_user","Inserisci il nome dell'utente che accederà via Web l'IDM dell'IdP (premi 'Invio' per tenere il valore predefinito 'idm-admin'): "),
@@ -60,8 +60,6 @@ def get_yml_orderedDict(lang):
                ("shibboleth_db_password","Inserisci la password dell'utente 'shibboleth' di MySQL (premi 'Invio' per generare un valore casuale): "),
                ("bindDNCredential","Inserisci la password dell'utente 'idpuser' di OpenLDAP (premi 'Invio' per generare un valore casuale): "),
                ("idp_stats_db_pw","Inserisci la password dell'utente 'statistics' di MySQL (premi 'Invio' per generare un valore casuale): "),
-               ("flup_secret_key","Inserisci la secret key di FLUP (premi 'Invio' per generare un valore casuale): "),
-               ("idpcloud_idm","Inserisci 'spuid' per riconoscere gli utenti con il Codice Fiscale(schacPersonalUniqueID) o\nInserisci 'email' per riconoscere gli utenti con la loro e-mail personale (premi 'Invio' per 'spuid'): "),
             ])
 
    if (lang == 'en-GB'):
@@ -84,8 +82,8 @@ def get_yml_orderedDict(lang):
                ("mdui_info_en","Insert the URL of the Information page valid for the Institution in ENGLISH language (press Enter to keep the default value): "),
                ("idp_support_email","Insert the User Support e-mail address for the Institutional IdP (press Enter to keep the default value 'idpcloud-service@example.org'): "),
                ("idp_support_address","Insert your institution address (press Enter to provide it later): "),
-               ("idp_type","Insert 'Debian-IdP-with-IdM-GARR' or 'Debian-IdP-without-IdM': (press 'Enter' for 'Debian-IdP-with-IdM-GARR'): "),
-               ("ca","1) TERENA_SSL_CA_2\n2) TERENA_SSL_CA_3\n\nChoose 1 or 2 (or press Enter for 'TERENA_SSL_CA_3'): "),
+               ("idp_type","Insert 'Debian-IdP-with-IdM' or 'Debian-IdP-without-IdM': (press 'Enter' for 'Debian-IdP-with-IdM'): "),
+               ("ca","Insert the URL where the CA PEM certificate, used to generate SSL Key and Certificate of the IdP, can be retrieved. Examples:\n1) https://www.terena.org/activities/tcs/repository/sha2/TERENA_SSL_CA_2.pem\n2) https://www.terena.org/activities/tcs/repository-g3/TERENA_SSL_CA_3.pem\nDigit the CA URL here: "),
                ("idp_persistentId_salt","Insert the persistent-id salt (press Enter to generate a random value): "),
                ("idp_fticks_salt","Insert the f-ticks salt (press Enter to generate a random value): "),
                ("web_gui_user","Insert the username of the user who will have access to the IdP IDM (press Enter to keep the default value 'idm-admin'): "),
@@ -95,6 +93,4 @@ def get_yml_orderedDict(lang):
                ("shibboleth_db_password","Insert the 'shibboleth' user password (press Enter to generate a random value): "),
                ("bindDNCredential","Insert the 'idpuser' user password (press Enter to generate a random value): "),
                ("idp_stats_db_pw","Insert the 'statistics' user password (press Enter to generate a random value): "),
-               ("flup_secret_key","Insert the secret key used by FLUP (press Enter to generate a random value): "),
-               ("idpcloud_idm","Insert 'spuid' to use 'schacPersonalUniqueID' or\nInsert 'email' to use the email address\nto recognize the user on the FLUP application (press Enter to keep 'spuid'): "),
             ])

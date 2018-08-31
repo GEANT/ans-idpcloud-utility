@@ -8,6 +8,7 @@ from subprocess import check_output, call
 import shlex
 import os
 from cStringIO import StringIO
+import logging
 
 # PARAMETERS
 
@@ -24,23 +25,24 @@ def get_sealer_keystore_pw(idp_fqdn, idp_entityID, dest, ans_vault_file, debug):
    else:
       entityID = "https://" + idp_fqdn + "/idp/shibboleth"
 
+   ### Create a password long 27 characters
    idp_cred_pw = check_output(shlex.split("openssl rand -base64 27")).strip()
 
    if(debug):
-      print("IdP Credentials password : %s" % idp_cred_pw)
+      logging.debug("IdP Credentials password : %s" % idp_cred_pw)
 
    ### Create IDP Credentials DIR
    credentials_dir = dest
    call(["mkdir", "-p", credentials_dir])
 
    if(debug):
-      print("IdP Credentials directory created in: %s" % credentials_dir)
+      logging.debug("IdP 'credentials' directory created in: %s" % credentials_dir)
 
    ### Find the IDP /bin directory
    idp_bin_dir = check_output(shlex.split('find / -path "*shibboleth-identity-provider-*/bin"')).strip()
 
    if (debug):
-      print("IdP bin directory found in: %s" % idp_bin_dir)
+      logging.debug("IdP 'bin' directory found in: %s" % idp_bin_dir)
 
    ### Generate Sealer JKS and KVER
 
@@ -57,8 +59,8 @@ def get_sealer_keystore_pw(idp_fqdn, idp_entityID, dest, ans_vault_file, debug):
       FNULL.close()
    else:
       if (debug):
-         print("IdP Sealer JKS created into: %s" % sealer_jks)
-         print("IdP Sealer KVER created into: %s" % sealer_kver)
+         logging.debug("IdP Sealer JKS created into: %s" % sealer_jks)
+         logging.debug("IdP Sealer KVER created into: %s" % sealer_kver)
 
    ## Generate IDP Backchannel Certificate
 
@@ -75,8 +77,8 @@ def get_sealer_keystore_pw(idp_fqdn, idp_entityID, dest, ans_vault_file, debug):
       FNULL.close()
    else:
       if (debug):
-         print("IdP Backchannel PCKS12 created into: %s" % backchannel_p12)
-         print("IdP Backchannel Certificate created into: %s" % backchannel_crt)
+         logging.debug("IdP Backchannel PCKS12 created into: %s" % backchannel_p12)
+         logging.debug("IdP Backchannel Certificate created into: %s" % backchannel_crt)
 
    ### Generate IDP Signing Certificate and Key
 
@@ -93,8 +95,8 @@ def get_sealer_keystore_pw(idp_fqdn, idp_entityID, dest, ans_vault_file, debug):
       FNULL.close()
    else:
       if (debug):
-         print("IdP Signing Certificate created into: %s" % signing_crt)
-         print("IdP Signing Key created into: %s" % signing_key)
+         logging.debug("IdP Signing Certificate created into: %s" % signing_crt)
+         logging.debug("IdP Signing Key created into: %s" % signing_key)
 
    ### Generate IDP Encryption Certificate and Key
 
@@ -111,8 +113,8 @@ def get_sealer_keystore_pw(idp_fqdn, idp_entityID, dest, ans_vault_file, debug):
       FNULL.close()
    else:
       if (debug):
-         print("IdP Encryption Certificate created into: %s" % encryption_crt)
-         print("IdP Encryption Key created into: %s" % encryption_key)
+         logging.debug("IdP Encryption Certificate created into: %s" % encryption_crt)
+         logging.debug("IdP Encryption Key created into: %s" % encryption_key)
 
    ### Generate a file containing the Credentials Password encrypted with Ansible Vault to be able to upload it on a private GIT
 

@@ -6,11 +6,12 @@ import argparse
 import os
 import sys
 import shutil
+import logging
 
 if __name__ == "__main__":
    parser = argparse.ArgumentParser()
-   parser.add_argument("--fqdn", help="Provide the FQDN", action="store", default="", required=True)
-   parser.add_argument("--entityID", help="Provide the entityID for the IdP", action="store", default="")
+   parser.add_argument("fqdn", help="Full Qualified Domain Name of Shibboleth IdP")
+   parser.add_argument("--entityid", help="Provide the entityID for the IdP", action="store", default="")
    parser.add_argument("--force", help="Force regeneration ansible-shibboleth YML file", action="store_true", default=False)
    parser.add_argument("--csr", help="Generate SSL CSR and SSL Key Only", action="store_true", default=False)
    parser.add_argument("--yml", help="Generate IdP YML file Only", action="store_true", default=False)
@@ -24,8 +25,8 @@ if __name__ == "__main__":
    ANS_SHIB_INV_FILES = ANS_SHIB_INV + "/files"
    ANS_SHIB_INV_PROD = ANS_SHIB_INV + "/production"
 
-   IDP_YML_HOST_VARS = ANS_SHIB_INV_PROD + "/host_vars"
-   IDP_YML = IDP_YML_HOST_VARS + '/' + args.fqdn + '.yml'
+   IDP_PROD_HOST_VARS = ANS_SHIB_INV_PROD + "/host_vars"
+   IDP_YML = IDP_PROD_HOST_VARS + '/' + args.fqdn + '.yml'
 
    IDP_FILES_DIR = ANS_SHIB_INV_FILES+'/'+args.fqdn
    IDP_SAMPLE_FILES_DIR = ANS_SHIB_INV_FILES+'/sample-FQDN-dir'
@@ -34,56 +35,89 @@ if __name__ == "__main__":
    IDP_CRED_DIR = IDP_FILES_DIR + '/idp/credentials'
    IDP_STYLES_DIR = IDP_FILES_DIR + '/idp/styles'
    IDP_STYLES_DIR_SAMPLE = IDP_SAMPLE_FILES_DIR + '/idp/styles'
-
    # CONSTANTS END
 
-   if(args.fqdn and not(args.csr == args.yml == args.os == args.everything == False)):
+   # Remove LOG file before start
+   os.system("rm logs/createIdP.log")
+
+   # Create a new LOG file
+   logging.basicConfig(filename='logs/createIdP.log', format='%(asctime)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S', level=logging.DEBUG)
+
+   if(args.fqdn and (args.csr == True or args.yml == True or args.everything == True)):
     if(args.force):
+     logging.debug("Removing '%s' files..." % (args.fqdn))
+     os.system("sed -i '/"+args.fqdn+"/d' "+ ANS_SHIB_INV_PROD + "/production.ini")
      os.remove(IDP_YML)
      shutil.rmtree(IDP_FILES_DIR)
+     logging.debug("...files deleted.")
  
     # If I run the script with "--fqdn" and "--csr"
     if (args.csr):
+     logging.debug("Creating SSL CSR and KEY for '%s' ..." % (args.fqdn))
      #Create CSR and KEY for the IdP, if not exist, in IDP_SSL_DEST
-     utils.generate_csr(args.fqdn, args.req_info, IDP_SSL_DIR, args.san)
+     utils.generate_csr(args.fqdn, IDP_SSL_DIR)
+     logging.debug("...SSL CSR and KEY created.")
 
     # If I run the script with "--fqdn" and "--yml"
     if (args.yml):
+     logging.debug("Creating IdP credentials for '%s' ..." % (args.fqdn))
      # Create or Retrieve the Shibboleth IdP sealer/keystore password
-     idp_sealer_pw = utils.get_sealer_keystore_pw(args.fqdn, args.entityID, IDP_CRED_DIR, ANS_VAULT_FILE, False)
+     idp_sealer_pw = utils.get_sealer_keystore_pw(args.fqdn, args.entityid, IDP_CRED_DIR, ANS_VAULT_FILE, False)
+     logging.debug("...IdP credentials created.")
 
      # Create the IdP YAML file and ecrypt it with Ansible Vault
-     utils.create_idp_yml(args.fqdn, args.entityID, IDP_SSL_DIR, IDP_YML, IDP_STYLES_DIR, IDP_PLA_FILES_DIR, idp_sealer_pw, ANS_VAULT_FILE)
+     logging.debug("Creating IDP YAML file for '%s' ..." % (args.fqdn))
+     utils.create_idp_yml(args.fqdn, args.entityid, IDP_SSL_DIR, IDP_YML, IDP_STYLES_DIR, IDP_PLA_FILES_DIR, idp_sealer_pw, ANS_VAULT_FILE)
+     logging.debug("...IDP YAML file created.")
 
     # If I run script with "--fqdn" and "--everything" I have to follow all steps
     if (args.everything):
-      # Create CSR and KEY for the IdP, if not exist, in the IDP_SSL_DEST directory
-      utils.generate_csr(args.fqdn, args.req_info, IDP_SSL_DIR, args.san)
+     logging.debug("Creating all needed files for '%s' IdP ..." % (args.fqdn))
+     logging.debug("Creating SSL CSR and KEY ...")
+     # Create CSR and KEY for the IdP, if not exist, in the IDP_SSL_DEST directory
+     utils.generate_csr(args.fqdn, IDP_SSL_DIR)
+     logging.debug("...SSL CSR and KEY created.")
  
-      # Create or Retrieve the Shibboleth IdP sealer/keystore password
-      idp_sealer_pw = utils.get_sealer_keystore_pw(args.fqdn, args.entityID, IDP_CRED_DIR, ANS_VAULT_FILE, False)
+     logging.debug("Creating IdP credentials ...")
+     # Create or Retrieve the Shibboleth IdP sealer/keystore password
+     idp_sealer_pw = utils.get_sealer_keystore_pw(args.fqdn, args.entityid, IDP_CRED_DIR, ANS_VAULT_FILE, False)
+     logging.debug("...IdP credentials created.")
 
-      # Create the IdP YAML file
-      idp_type = utils.create_idp_yml(args.fqdn, args.entityID, IDP_SSL_DIR, IDP_YML, IDP_FILES_DIR + '/idp/styles', IDP_FILES_DIR + '/phpldapadmin', idp_sealer_pw, ANS_VAULT_FILE)
+     logging.debug("Creating IDP YAML file ...")
+     # Create the IdP YAML file
+     idp_type = utils.create_idp_yml(args.fqdn, args.entityid, IDP_SSL_DIR, IDP_YML, IDP_FILES_DIR + '/idp/styles', IDP_FILES_DIR + '/phpldapadmin', idp_sealer_pw, ANS_VAULT_FILE)
+     logging.debug("...IDP YAML file created.")
 
-      # Add the new IdP on the production.ini file
-      utils.add_idp_to_inventory(args.fqdn, idp_type, ANS_SHIB_INV_PROD + '/production.ini')
+     # Add the new IdP on the production.ini file
+     logging.debug("Adding the IDP to 'production' inventory...")
+     utils.add_idp_to_inventory(args.fqdn, idp_type, ANS_SHIB_INV_PROD + '/production.ini')
+     logging.debug("...IDP added to 'production' inventory.")
 
-      # Copy italian and english flags on the IdP styles dir
-      os.system('cp -nr %s/idp/styles/it/itFlag.png %s/idp/styles/it/itFlag.png' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
-      os.system('cp -nr %s/idp/styles/en/enFlag.png %s/idp/styles/en/enFlag.png' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     # Copy italian and english flags on the IdP styles dir
+     logging.debug("Copying samples flags into the IdP directory...")
+     os.system('cp -nr %s/idp/styles/it/itFlag.png %s/idp/styles/it/itFlag.png' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     os.system('cp -nr %s/idp/styles/en/enFlag.png %s/idp/styles/en/enFlag.png' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     logging.debug("...samples flags copied.")
 
-      # Copy federation and interfederation logo on the IdP styles dir
-      os.system('cp -nr %s/idp/styles/images %s/idp/styles/images' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     # Copy federation and interfederation logo on the IdP styles dir
+     logging.debug("Copying federation and interfederation logos into the IdP directory...")
+     os.system('cp -nr %s/idp/styles/images %s/idp/styles' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     logging.debug("...federation and interfederation logos copied.")
 
-      # Create 'idp/mysql-restore' dir with its README.md file
-      os.system('cp -nr %s/idp/mysql-restore %s/idp/mysql-restore' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     # Create 'idp/mysql-restore' dir with its README.md file
+     logging.debug("Copying MySQL restore directory into the IDP directory...")
+     os.system('cp -nr %s/idp/mysql-restore %s/idp' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     logging.debug("...MySQL restore directory copied.")
 
-      # Create 'idp/conf' dir with its content
-      os.system('cp -nr %s/idp/conf %s/idp/conf' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     # Create 'idp/conf' dir with its content
+     logging.debug("Copying IdP 'conf' directory into the IDP directory...")
+     os.system('cp -nr %s/idp/conf %s/idp' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     logging.debug("...IdP 'conf' directory copied.")
       
-      # Create 'openldap' dir with its content
-      os.system('cp -nr %s/openldap %s/openldap' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     # Create 'openldap' dir with its content
+     logging.debug("Copying IdP OpenLDAP restore directory into the IDP directory...")
+     os.system('cp -nr %s/openldap %s' % (IDP_SAMPLE_FILES_DIR, IDP_FILES_DIR))
+     logging.debug("...IdP OpenLDAP restore directory copied.")
 
    else:
       print("!!! FQDN(--fqdn) or generation's mode missing !!!\n")

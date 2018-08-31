@@ -10,7 +10,7 @@ files_dir: "/opt/ansible-shibboleth/inventories/files"
 ### For self-signed certs use ca: "{{ fqdn }}.crt"
 common:
  ssl: "True"
- ca: "$ca"
+ ca: "cacert.pem"
  ssl_cert: "{{ fqdn }}.crt"
  ssl_key: "{{ fqdn }}.key"
  swap:
