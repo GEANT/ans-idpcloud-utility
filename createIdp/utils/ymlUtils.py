@@ -54,7 +54,6 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
          while (result == "" or result == None):
             result = raw_input(question)
 
-<<<<<<< HEAD
             if (key == "ca"):
                checkUrl = validators.url(result)
                while not(checkUrl == True):
@@ -79,11 +78,20 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
                   result = raw_input(question)
                   checkUrl = validators.url(result)
 
+            # MDUI English and Italian description
+            if (key == "mdui_description_en" and (result == "" or result == None)):
+               result = "Identity provider for " + vals['mdui_displayName_en'] + " users"
+
             if (key == "mdui_description_it" and (result == "" or result == None)):
                result = "Identity provider per gli utenti di " + vals['mdui_displayName_it']
 
-            if (key == "mdui_description_en" and (result == "" or result == None)):
-               result = "Identity provider for " + vals['mdui_displayName_en'] + " users"
+            # Default MDUI Info and Privacy web pages of the IDP
+            # are created upon these templates:
+            #
+            # 1) /opt/ansible-shibboleth/roles/idp/templates/styles/en/info.html.j2
+            # 2) /opt/ansible-shibboleth/roles/idp/templates/styles/it/info.html.j2
+            # 3) /opt/ansible-shibboleth/roles/idp/templates/styles/en/privacy.html.j2
+            # 4) /opt/ansible-shibboleth/roles/idp/templates/styles/it/privacy.html.j2
 
             if (key == "mdui_privacy_it"):
                checkUrl = False
