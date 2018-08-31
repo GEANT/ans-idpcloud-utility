@@ -15,7 +15,7 @@ if __name__ == "__main__":
    parser.add_argument("--force", help="Force regeneration ansible-shibboleth YML file", action="store_true", default=False)
    parser.add_argument("--csr", help="Generate SSL CSR and SSL Key Only", action="store_true", default=False)
    parser.add_argument("--yml", help="Generate IdP YML file Only", action="store_true", default=False)
-   parser.add_argument("--everything", help="Generate SSL credentials, IdP and OS YML files", action="store_true", default=False)
+   parser.add_argument("--everything", help="Generate SSL credentials and IdP YML files", action="store_true", default=False)
    args = parser.parse_args()
  
    # CONSTANTS STARTS
