@@ -14,6 +14,7 @@ import hashlib
 import utils
 import validators
 import logging
+import url
 
 ### FUNCTIONS NEEDED TO CREATE IDP YAML FILE ###
 
@@ -61,8 +62,11 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
                   checkUrl = validators.url(result)
 
                r = requests.get(result)
-               with open(ca_dest + '/cacert.pem', 'wb') as f:
+               filenameCA = url.rsplit('/', 1)[-1]
+               with open(ca_dest + '/' + filenameCA, 'wb') as f:
                   f.write(r.content)
+
+               val['ca'] = filenameCA
 
             if(key == "domain"):
                checkUrl = validators.domain(result)
