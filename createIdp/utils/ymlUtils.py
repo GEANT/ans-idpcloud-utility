@@ -14,7 +14,6 @@ import hashlib
 import utils
 import validators
 import logging
-import url
 
 ### FUNCTIONS NEEDED TO CREATE IDP YAML FILE ###
 
@@ -29,7 +28,7 @@ def get_random_str(string_length):
 def get_basedn_from_domain(domain):
    return "dc="+domain.replace(".",",dc=")
 
-def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files, idp_pla_files_dir, idp_sealer_keystore_pw, ans_vault_file):
+def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, idp_styles_dir, idp_pla_files_dir, idp_sealer_keystore_pw, ans_vault_file):
 
    if (path.isfile(yml_dest)):
       logging.debug("IdP YAML file already exist at: %s" % (yml_dest))
@@ -62,13 +61,13 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
                   checkUrl = validators.url(result)
 
                r = requests.get(result)
-               filenameCA = url.rsplit('/', 1)[-1]
+               filenameCA = result.rsplit('/', 1)[-1]
                with open(ca_dest + '/' + filenameCA, 'wb') as f:
                   f.write(r.content)
 
-               val['ca'] = filenameCA
+               vals['ca'] = filenameCA
 
-            if(key == "domain"):
+            if (key == "domain"):
                checkUrl = validators.domain(result)
                while not(checkUrl == True):
                   result = raw_input(question)
@@ -151,8 +150,8 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
                while not (checkUrl == True):
                   # CASE 1: Default
                   if (result == "" or result == None):
-                    result = "https://garr-idp-prod.irccs.garr.it/it/logo.png"
-                    checkUrl = True
+                     result = "https://www.garr.it/images/logo-idp.png"
+                     checkUrl = True
                   # CASE 2: Logo provided by institution via HTTP/HTTPS url
                   elif (validators.url(result)):
                      checkUrl = True
@@ -176,7 +175,7 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
                while not (checkUrl == True):
                   # CASE 3: Default
                   if (result == "" or result == None):
-                     result = "https://garr-idp-prod.irccs.garr.it/en/logo.png"
+                     result = "https://www.garr.it/images/logo-idp.png"
                      checkUrl = True
                   # CASE 4: Logo provided by institution via HTTP/HTTPS url
                   elif (validators.url(result)):
@@ -188,7 +187,7 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
                with open(idp_styles_dir + '/en/logo.png', 'wb') as f:
                   f.write(r.content)
 
-               with open(idp_pla_files_dir + '/logo.png', 'wb') as f:
+               with open(idp_pla_files_dir + '/images/logo.png', 'wb') as f:
                   f.write(r.content)
              
                result = "https://"+ idp_fqdn +"/en/logo.png"
@@ -203,7 +202,7 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
                while not (checkUrl == True):
                   # CASE 5: Default
                   if (result == "" or result == None):
-                     result = "https://garr-idp-prod.irccs.garr.it/it/favicon.png"
+                     result = "https://www.garr.it/images/favicon-idp.png"
                      checkUrl = True
                   # CASE 6: Favicon provided by institution via HTTP/HTTPS url
                   elif (validators.url(result)):
@@ -228,7 +227,7 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
                while not (checkUrl == True):
                   # CASE 7: Default
                   if (result == "" or result == None):
-                     result = "https://garr-idp-prod.irccs.garr.it/en/favicon.png"
+                     result = "https://www.garr.it/images/favicon-idp.png"
                      checkUrl = True
                   # CASE 8: English Favicon provided by the institution via HTTP/HTTPS location
                   elif (validators.url(result)):
@@ -304,7 +303,7 @@ def create_idp_yml(idp_fqdn, idp_entityID, ca_dest, yml_dest, ans_shib_inv_files
       yaml.close()
 
       ## Encrypt password with Ansible Vault (if requested)
-      if (ans_vault_file):
+      if (os.path.isfile(ans_vault_file)):
          # Needed to avoid output of 'call' commands
          FNULL = open(os.devnull, 'w')
          call(["ansible-vault", "encrypt", yml_dest, "--vault-password-file", ans_vault_file], stdout=FNULL)

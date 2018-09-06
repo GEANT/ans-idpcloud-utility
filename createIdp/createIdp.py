@@ -20,7 +20,7 @@ if __name__ == "__main__":
  
    # CONSTANTS STARTS
    ANS_SHIB = "/opt/ansible-shibboleth"
-   ANS_VAULT_FILE = "/opt/idpcloud-ansible-master/.vault_pass"
+   ANS_VAULT_FILE = "/opt/ansible-shibboleth/.vault_pass"
    ANS_SHIB_INV = ANS_SHIB + "/inventories"
    ANS_SHIB_INV_FILES = ANS_SHIB_INV + "/files"
    ANS_SHIB_INV_PROD = ANS_SHIB_INV + "/production"
@@ -38,7 +38,7 @@ if __name__ == "__main__":
    # CONSTANTS END
 
    # Remove LOG file before start
-   os.system("rm logs/createIdP.log")
+   os.system("cat /dev/null > logs/createIdP.log")
 
    # Create a new LOG file
    logging.basicConfig(filename='logs/createIdP.log', format='%(asctime)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S', level=logging.DEBUG)
@@ -47,7 +47,10 @@ if __name__ == "__main__":
     if(args.force):
      logging.debug("Removing '%s' files..." % (args.fqdn))
      os.system("sed -i '/"+args.fqdn+"/d' "+ ANS_SHIB_INV_PROD + "/production.ini")
-     os.remove(IDP_YML)
+     
+     if (os.path.isfile(IDP_YML)):
+        os.remove(IDP_YML)
+
      shutil.rmtree(IDP_FILES_DIR)
      logging.debug("...files deleted.")
  
