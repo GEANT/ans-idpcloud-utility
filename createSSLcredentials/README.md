@@ -3,7 +3,7 @@
 This repository contains useful instructions that allow to create SSL Certificate and SSL Keys for testing ansible-shibboleth recipes
 
 ## Requirements
-* `apt-get openssl`
+* `apt-get install openssl`
 
 ## Instructions
 
