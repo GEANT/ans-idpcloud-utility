@@ -9,10 +9,7 @@ This repository contains useful instructions that allow to create SSL Certificat
 
 1. Create needed directories:
 
-   * `sudo mkdir -p /etc/ssl/CA/certs`
-   * `sudo mkdir -p /etc/ssl/CA/crl`
-   * `sudo mkdir -p /etc/ssl/CA/newcerts`
-   * `sudo mkdir -p /etc/ssl/CA/private`
+   * `sudo mkdir -p /etc/ssl/CA/certs /etc/ssl/CA/crl /etc/ssl/CA/newcerts /etc/ssl/CA/private`
    * `sudo chmod 700 /etc/ssl/CA/private`
 
 2. Generate the SSL CA Key:
