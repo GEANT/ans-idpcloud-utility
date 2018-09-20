@@ -77,9 +77,7 @@ This repository contains useful instructions that allow to create SSL Certificat
 
      # Put here ALL your virtual machine FQDN
      [ alt_names ]
-     DNS.1 = vm1.example.org
-     DNS.2 = vm2.example.org
-     DNS.3 = vm3.example.org
+     DNS.1 = *.example.org
 
      [ v3_ca ]
      ...
