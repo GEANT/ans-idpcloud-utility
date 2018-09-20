@@ -36,30 +36,30 @@ This repository contains useful instructions that allow to create SSL Certificat
      req_extensions = v3_req
 
      [ req_distinguished_name ]
-     countryName			            = Country Name (2 letter code)
-     countryName_default		      = IT
-     countryName_min			         = 2
-     countryName_max			         = 2
+     countryName                    = Country Name (2 letter code)
+     countryName_default            = IT
+     countryName_min                = 2
+     countryName_max                = 2
 
-     stateOrProvinceName		      = State or Province Name (full name)
-     stateOrProvinceName_default	   = Italy
+     stateOrProvinceName            = State or Province Name (full name)
+     stateOrProvinceName_default    = Italy
 
-     localityName			            = Locality Name (eg, city)
-     localityName_default		      = Rome
+     localityName                   = Locality Name (eg, city)
+     localityName_default           = Rome
 
-     0.organizationName		         = Organization Name (eg, company)
-     0.organizationName_defaul	   = Example Organization
+     0.organizationName             = Organization Name (eg, company)
+     0.organizationName_defaul      = Example Organization
 
-     organizationalUnitName		   = Organizational Unit Name (eg, section)
-     organizationalUnitName_default	= Example
+     organizationalUnitName         = Organizational Unit Name (eg, section)
+     organizationalUnitName_default = Example
 
-     commonName			            = Common Name (e.g. server FQDN or YOUR name)
-     commonName_default		         = Example CA
-     commonName_max			         = 64
+     commonName                     = Common Name (e.g. server FQDN or YOUR name)
+     commonName_default             = Example CA
+     commonName_max                 = 64
 
-     emailAddress			            = Email Address
-     emailAddress_default		      = custom-ca@example.org
-     emailAddress_max		         = 64
+     emailAddress                   = Email Address
+     emailAddress_default           = custom-ca@example.org
+     emailAddress_max               = 64
 
      [ usr_cert ]
 
