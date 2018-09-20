@@ -75,7 +75,7 @@ This repository contains useful instructions that allow to create SSL Certificat
      keyUsage = nonRepudiation, digitalSignature, keyEncipherment
      subjectAltName = @alt_names
 
-     # Put here ALL your virtual machine FQDN
+     # Example shows how to support ALL 'example.org' servers
      [ alt_names ]
      DNS.1 = *.example.org
 
